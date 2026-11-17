@@ -324,3 +324,107 @@ a {
     padding-bottom: 4px;
   }
 }
+.auth-screen {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: var(--space-8) 24px;
+  background:
+    radial-gradient(ellipse at 50% 15%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 52%),
+    var(--color-background);
+}
+
+.auth-content {
+  width: min(460px, 100%);
+  margin: auto;
+}
+
+.auth-brand {
+  width: fit-content;
+  margin-bottom: clamp(56px, 12vh, 112px);
+}
+
+.auth-content .heading-display {
+  margin-top: var(--space-4);
+  font-size: clamp(2.5rem, 8vw, 3.5rem);
+}
+
+.auth-card {
+  display: block;
+  margin-top: var(--space-8);
+}
+
+.google-sign-in {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.google-mark {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.auth-card .text-muted {
+  text-align: center;
+}
+
+.auth-error,
+.auth-inline-error {
+  color: #a33b32;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
+}
+
+.auth-error {
+  margin: var(--space-4) 0 0;
+}
+
+.auth-footer {
+  position: absolute;
+  bottom: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.auth-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.account-name {
+  max-width: min(260px, 38vw);
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-inline-error {
+  margin: var(--space-4) 0 0;
+}
+
+@media (max-width: 720px) {
+  .auth-screen {
+    padding: var(--space-6) 22px;
+  }
+
+  .auth-brand {
+    margin-bottom: 64px;
+  }
+
+  .auth-footer {
+    bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  }
+}
