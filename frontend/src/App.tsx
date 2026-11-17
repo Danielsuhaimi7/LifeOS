@@ -7,6 +7,12 @@ import {
   useLocation,
 } from "react-router";
 import { Button, Card } from "./components/ui";
+import {
+  AuthLoadingPage,
+  FirebaseSetupPage,
+  SignInPage,
+} from "./auth/AuthPages";
+import { FirebaseAuthProvider, useAuth } from "./auth/FirebaseAuthProvider";
 
 type NavigationItem = {
   label: string;
@@ -32,14 +38,26 @@ const moreNavigation = desktopNavigation.filter((item) =>
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppLayout />
-    </BrowserRouter>
+    <FirebaseAuthProvider>
+      <BrowserRouter>
+        <AppGate />
+      </BrowserRouter>
+    </FirebaseAuthProvider>
   );
+}
+
+function AppGate() {
+  const { configured, loading, user } = useAuth();
+
+  if (!configured) return <FirebaseSetupPage />;
+  if (loading) return <AuthLoadingPage />;
+  if (!user) return <SignInPage />;
+  return <AppLayout />;
 }
 
 function AppLayout() {
   const location = useLocation();
+  const { user, error, signOutUser } = useAuth();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   useEffect(() => {
@@ -49,6 +67,7 @@ function AppLayout() {
   const isMoreActive = moreNavigation.some((item) =>
     location.pathname.startsWith(item.to),
   );
+  const initials = user?.displayName?.trim().charAt(0).toUpperCase() || "Y";
 
   return (
     <main className="app-shell">
@@ -72,8 +91,19 @@ function AppLayout() {
       <section className="content">
         <header className="topbar">
           <span className="text-eyebrow">YOUR PERSONAL SPACE</span>
-          <Button variant="icon" aria-label="Profile menu">D</Button>
+          <div className="account-actions">
+            {user?.displayName && <span className="account-name">{user.displayName}</span>}
+            <Button
+              aria-label="Sign out"
+              onClick={() => void signOutUser()}
+              title="Sign out"
+              variant="icon"
+            >
+              {initials}
+            </Button>
+          </div>
         </header>
+        {error && <p className="auth-inline-error" role="alert">{error}</p>}
 
         <div className="page-content" id="main-content" tabIndex={-1}>
           <Routes>
@@ -203,4 +233,3 @@ function NotFoundPage() {
 }
 
 export default App;
-

@@ -24,6 +24,5 @@ From the repository root:
 - docs/ — product and architecture notes
 - .agents/ and .codex/agents/ — LifeOS-specific agent guidance
 
-Firebase Authentication, Firestore, and Hosting are proposed subject to free-tier validation. See docs/ARCHITECTURE.md. No paid service should be enabled without explicit approval.
-
+Firebase Authentication now supports Google sign-in once a local Firebase web app is configured. See docs/FIREBASE_SETUP.md and docs/ARCHITECTURE.md. Firestore and Hosting remain unconfigured. No paid service should be enabled without explicit approval.
 
