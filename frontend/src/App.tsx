@@ -16,6 +16,7 @@ import { FirebaseAuthProvider, useAuth } from "./auth/FirebaseAuthProvider";
 import { TasksPage } from "./tasks/TasksPage";
 import { CalendarPage } from "./calendar/CalendarPage";
 import { NotesPage } from "./notes/NotesPage";
+import { DashboardPage } from "./dashboard/DashboardPage";
 
 type NavigationItem = {
   label: string;
@@ -110,7 +111,7 @@ function AppLayout() {
 
         <div className="page-content" id="main-content" tabIndex={-1}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/notes" element={<NotesPage />} />
@@ -185,25 +186,6 @@ function NavigationLink({
       <span className="nav-dot" aria-hidden="true" />
       {item.label}
     </NavLink>
-  );
-}
-
-function HomePage() {
-  return (
-    <div className="welcome">
-      <p className="text-eyebrow">LIFEOS FOUNDATION</p>
-      <h1 className="heading-display">Your life, in one calm place.</h1>
-      <p className="text-body">
-        Your tasks, calendar, and notes are ready to organize. Finance will take shape here one small step at a time.
-      </p>
-      <Card className="welcome-card">
-        <span className="welcome-icon" aria-hidden="true">✦</span>
-        <div>
-          <strong>Starting with a clean foundation</strong>
-          <p className="text-muted">Tasks are private to your account and sync through Firestore.</p>
-        </div>
-      </Card>
-    </div>
   );
 }
 

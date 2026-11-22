@@ -28,7 +28,7 @@ Restart the Vite development server after changing environment variables. `front
 - Desktop uses a Google sign-in popup.
 - Narrow/mobile screens use a full-page redirect; Firebase returns to the app after Google sign-in.
 - All LifeOS routes stay behind the Firebase auth state gate. When the project config is missing, the app shows setup guidance instead of exposing the workspace.
-- Tasks, Calendar, and Notes create or reuse a minimal owner profile and use Firestore after the reviewed LOS-005/LOS-007/LOS-008/LOS-009 rules are deployed. Finance and Settings remain placeholders.
+- Tasks, Calendar, and Notes create or reuse a minimal owner profile and use Firestore after the reviewed LOS-005/LOS-007/LOS-008/LOS-009 rules are deployed. The Home dashboard reads tasks and appointments. Finance and Settings remain placeholders.
 - Firestore access must continue to be protected by Firestore Security Rules. A client-side sign-in gate alone is not a data authorization boundary.
 
 ## Local commands

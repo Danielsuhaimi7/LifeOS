@@ -18,6 +18,7 @@
 - frontend/src/tasks/ — Firestore task and recurring-series repositories plus the responsive task management page.
 - frontend/src/calendar/ — Firestore appointment repository and responsive calendar/agenda page.
 - frontend/src/notes/ — Firestore notes/folders repository and responsive plain-text/checklist editor with autosave.
+- frontend/src/dashboard/ — owner-scoped home dashboard built from tasks and appointments.
 - docs/NAVIGATION.md — desktop/mobile navigation and feature route status.
 - docs/DECISIONS.md — provisional choices and open questions.
 - docs/DESIGN_SYSTEM.md — UI conventions and component usage.
@@ -25,5 +26,5 @@
 - AGENTS.md — repository-wide guidance.
 - .codex/agents/ — LifeOS-specific role instructions.
 
-Google Authentication, task management, recurring tasks, appointment calendar, and notes/folders data access exist. The LOS-005, LOS-007, LOS-008, and LOS-009 rules must be deployed before cloud operations work. Finance and Settings remain placeholders.
+Google Authentication, task management, recurring tasks, appointment calendar, notes/folders, and the task/appointment dashboard exist. The LOS-005, LOS-007, LOS-008, and LOS-009 rules must be deployed before cloud operations work. Finance and Settings remain placeholders; finance dashboard cards depend on the finance tickets.
 
