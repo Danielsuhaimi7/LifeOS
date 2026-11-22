@@ -1,11 +1,13 @@
-import { Timestamp, collection, doc, getDocs, onSnapshot, serverTimestamp, setDoc, type Unsubscribe } from "firebase/firestore";
+import { Timestamp, collection, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp, setDoc, updateDoc, type Unsubscribe } from "firebase/firestore";
 import { firestoreDb } from "../auth/FirebaseAuthProvider";
+import type { AccountType } from "./accountRepository";
 
-export type TransactionKind = "income" | "expense";
+export type TransactionKind = "income" | "expense" | "transfer";
+export type CategoryKind = Exclude<TransactionKind, "transfer">;
 export type LifeCategory = {
   id: string;
   name: string;
-  kind: TransactionKind;
+  kind: CategoryKind;
   colorKey: string | null;
   archived: boolean;
   createdAt: Timestamp;
@@ -28,6 +30,7 @@ export type TransactionInput = {
   amountSen: number;
   occurredAt: Timestamp;
   accountId: string;
+  toAccountId: string | null;
   categoryName: string | null;
   memo: string | null;
 };
@@ -49,7 +52,7 @@ export function subscribeToCategories(userId: string, onCategories: (items: Life
   }, onError);
 }
 
-async function resolveCategory(userId: string, name: string, kind: TransactionKind): Promise<string> {
+async function resolveCategory(userId: string, name: string, kind: CategoryKind): Promise<string> {
   const db = database();
   const snapshot = await getDocs(collection(db, "users", userId, "categories"));
   const existing = snapshot.docs.find((item) => {
@@ -66,14 +69,16 @@ async function resolveCategory(userId: string, name: string, kind: TransactionKi
 export async function createTransaction(userId: string, input: TransactionInput): Promise<void> {
   const db = database();
   const categoryName = input.categoryName?.trim() ?? "";
-  const categoryId = categoryName ? await resolveCategory(userId, categoryName, input.kind) : null;
+  const categoryId = categoryName && input.kind !== "transfer"
+    ? await resolveCategory(userId, categoryName, input.kind)
+    : null;
   const ref = doc(collection(db, "users", userId, "transactions"));
   await setDoc(ref, {
     kind: input.kind,
     amountSen: input.amountSen,
     occurredAt: input.occurredAt,
     accountId: input.accountId,
-    toAccountId: null,
+    toAccountId: input.toAccountId,
     categoryId,
     memo: input.memo?.trim() || null,
     createdAt: serverTimestamp(),
@@ -81,12 +86,37 @@ export async function createTransaction(userId: string, input: TransactionInput)
   });
 }
 
-export function accountBalanceSen(accountId: string, openingBalanceSen: number, transactions: LifeTransaction[]): number {
+export async function updateTransaction(userId: string, transactionId: string, input: TransactionInput): Promise<void> {
+  const categoryName = input.categoryName?.trim() ?? "";
+  const categoryId = categoryName && input.kind !== "transfer"
+    ? await resolveCategory(userId, categoryName, input.kind)
+    : null;
+  await updateDoc(doc(database(), "users", userId, "transactions", transactionId), {
+    kind: input.kind,
+    amountSen: input.amountSen,
+    occurredAt: input.occurredAt,
+    accountId: input.accountId,
+    toAccountId: input.toAccountId,
+    categoryId,
+    memo: input.memo?.trim() || null,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteTransaction(userId: string, transactionId: string): Promise<void> {
+  await deleteDoc(doc(database(), "users", userId, "transactions", transactionId));
+}
+
+export function accountBalanceSen(accountId: string, accountType: AccountType, openingBalanceSen: number, transactions: LifeTransaction[]): number {
   return transactions.reduce((balance, item) => {
+    if (item.kind === "transfer") {
+      if (item.accountId === accountId) return balance + (accountType === "creditCard" ? item.amountSen : -item.amountSen);
+      if (item.toAccountId === accountId) return balance + (accountType === "creditCard" ? -item.amountSen : item.amountSen);
+      return balance;
+    }
     if (item.accountId !== accountId) return balance;
-    if (item.kind === "income") return balance + item.amountSen;
-    if (item.kind === "expense") return balance - item.amountSen;
-    return balance;
+    if (accountType === "creditCard") return balance + (item.kind === "expense" ? item.amountSen : -item.amountSen);
+    return balance + (item.kind === "income" ? item.amountSen : -item.amountSen);
   }, openingBalanceSen);
 }
 

@@ -307,6 +307,21 @@ service cloud.firestore {
               isActiveCategory(userId, data.categoryId, data.kind))));
     }
 
+    function validExistingTransactionReferences(userId, data, existing) {
+      let accountPath = /databases/$(database)/documents/users/$(userId)/accounts/$(existing.accountId);
+      let destinationPath = /databases/$(database)/documents/users/$(userId)/accounts/$(existing.toAccountId);
+      let categoryPath = /databases/$(database)/documents/users/$(userId)/categories/$(existing.categoryId);
+      return data.kind == existing.kind &&
+        data.accountId == existing.accountId &&
+        data.toAccountId == existing.toAccountId &&
+        data.categoryId == existing.categoryId &&
+        exists(accountPath) &&
+        (existing.kind == 'transfer'
+          ? exists(destinationPath)
+          : existing.categoryId == null ||
+            (exists(categoryPath) && get(categoryPath).data.kind == existing.kind));
+    }
+
     function isValidTransaction(data) {
       return data is map &&
         data.keys().hasAll([
@@ -447,7 +462,8 @@ service cloud.firestore {
           isValidTransaction(request.resource.data) &&
           createdAtUnchanged(request.resource.data) &&
           updatedNow(request.resource.data) &&
-          validTransactionReferences(userId, request.resource.data);
+          (validTransactionReferences(userId, request.resource.data) ||
+            validExistingTransactionReferences(userId, request.resource.data, resource.data));
         allow delete: if hasParentProfile(userId);
       }
     }
