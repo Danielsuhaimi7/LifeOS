@@ -44,6 +44,8 @@ LOS-012 adds account management for cash, bank, investment, credit card, and oth
 
 LOS-013 adds income and expense transactions. Each transaction records a positive integer amount in sen, date, account, optional category, and optional memo. Categories are created as they are first used; category management and budgets are deferred to LOS-018. LOS-014 adds transfers between two different active accounts without a category, and credit card liability balance handling. Asset balances are opening balance plus income and incoming transfers, minus expenses and outgoing transfers. Credit card amounts owed are opening amount plus charges and outgoing transfers, minus payments and income credits. LOS-015 lets the owner edit or delete transactions; edits preserve `createdAt`, refresh `updatedAt`, and recalculate derived balances from the updated history. Edits can retain an existing archived account/category reference, but cannot assign a new archived reference. Deletion requires an explicit confirmation in the Finance interface.
 
+LOS-016 adds an owner-scoped Home finance overview. It summarizes net position across account balances, current-month income and expenses, and active account count from existing account and transaction records. Net position includes archived accounts so transfers to or from an archived account remain balanced. Transfers do not count as income or expenses. The summary uses Kuala Lumpur calendar-month boundaries and does not write derived totals to Firestore.
+
 ## Validation and write conventions
 
 - Firestore Rules allow only the fields listed for each document and enforce required fields, types, string lengths, enum values, integer ranges, and business constraints on both create and update.
