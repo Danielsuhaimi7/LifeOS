@@ -19,8 +19,8 @@
 - frontend/src/calendar/ — Firestore appointment repository and responsive calendar/agenda page.
 - frontend/src/notes/ — Firestore notes/folders repository and responsive plain-text/checklist editor with autosave.
 - frontend/src/dashboard/ — owner-scoped home dashboard built from tasks and appointments.
-- frontend/src/search/ — owner-scoped live search across tasks, appointments, notes, and accounts.
-- frontend/src/finance/ — owner-scoped account repository and Finance account management page.
+- frontend/src/search/ — owner-scoped live search across tasks, appointments, notes, accounts, and transactions.
+- frontend/src/finance/ — owner-scoped account/category/transaction repositories and Finance accounts plus income/expense page.
 - docs/NAVIGATION.md — desktop/mobile navigation and feature route status.
 - docs/DECISIONS.md — provisional choices and open questions.
 - docs/DESIGN_SYSTEM.md — UI conventions and component usage.
@@ -28,5 +28,5 @@
 - AGENTS.md — repository-wide guidance.
 - .codex/agents/ — LifeOS-specific role instructions.
 
-Google Authentication, task management, recurring tasks, appointment calendar, notes/folders, account management, task/appointment dashboard, and global search across available records exist. The LOS-005, LOS-007, LOS-008, and LOS-009 rules must be deployed before cloud operations work. Transactions and the Finance overview are planned for later finance tickets; Settings remains a placeholder.
+Google Authentication, task management, recurring tasks, appointment calendar, notes/folders, accounts, income/expense transactions, task/appointment dashboard, and global search across available records exist. The LOS-005, LOS-007, LOS-008, and LOS-009 rules must be deployed before cloud operations work. Transfers, safe transaction corrections, finance overview, and Settings remain future work.
 

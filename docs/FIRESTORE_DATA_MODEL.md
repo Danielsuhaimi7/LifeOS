@@ -40,7 +40,9 @@ LOS-008 adds the Calendar appointment interface. The calendar reads and writes o
 
 LOS-009 adds plain-text and checklist notes, simple folders, edited-time sorting, autosave status, and optional same-owner task and appointment links. Notes can be left unfiled. Deleting a note requires confirmation; folder records are kept so they remain safe references.
 
-LOS-012 adds account management for cash, bank, investment, credit card, and other asset accounts. Account records store a display name, type, MYR opening balance in integer sen, and archived state. They do not store account or card numbers. Account balances remain opening balances until transaction features update them.
+LOS-012 adds account management for cash, bank, investment, credit card, and other asset accounts. Account records store a display name, type, MYR opening balance in integer sen, and archived state. They do not store account or card numbers. LOS-013 derives current balances from the opening amount and transaction history without changing the stored opening balance.
+
+LOS-013 adds income and expense transactions. Each transaction records a positive integer amount in sen, date, account, optional category, and optional memo. Categories are created as they are first used; category management and budgets are deferred to LOS-018. Current account balances are calculated as opening balance plus income minus expenses. Transfers are deferred to LOS-014; safe edits and deletions are deferred to LOS-015.
 
 ## Validation and write conventions
 
