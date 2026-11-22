@@ -46,6 +46,8 @@ LOS-013 adds income and expense transactions. Each transaction records a positiv
 
 LOS-016 adds an owner-scoped Home finance overview. It summarizes net position across account balances, current-month income and expenses, and active account count from existing account and transaction records. Net position includes archived accounts so transfers to or from an archived account remain balanced. Transfers do not count as income or expenses. The summary uses Kuala Lumpur calendar-month boundaries and does not write derived totals to Firestore.
 
+LOS-017 adds a Settings view for the signed-in Firebase account and LifeOS regional defaults. It displays the authenticated profile information and the app-wide time zone, currency, date format, and week start; these defaults remain fixed and are not written by the Settings page.
+
 ## Validation and write conventions
 
 - Firestore Rules allow only the fields listed for each document and enforce required fields, types, string lengths, enum values, integer ranges, and business constraints on both create and update.

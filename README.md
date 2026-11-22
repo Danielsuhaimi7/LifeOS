@@ -24,5 +24,5 @@ From the repository root:
 - docs/ — product and architecture notes
 - .agents/ and .codex/agents/ — LifeOS-specific agent guidance
 
-Firebase Authentication and a Standard Firestore database are configured in the LifeOS Firebase project. Tasks, Calendar, Notes, Accounts, Transactions, and Global Search use owner-scoped Firestore records once the reviewed rules are deployed. Home summarizes tasks, appointments, current-month income and expenses, and account net position. Finance reports remain derived from transaction and account records; Settings is a placeholder, and Hosting is not deployed. See docs/FIREBASE_SETUP.md, docs/FIRESTORE_DATA_MODEL.md, and docs/ARCHITECTURE.md. No paid service should be enabled without explicit approval.
+Firebase Authentication and a Standard Firestore database are configured in the LifeOS Firebase project. Tasks, Calendar, Notes, Accounts, Transactions, and Global Search use owner-scoped Firestore records once the reviewed rules are deployed. Home summarizes tasks, appointments, current-month income and expenses, and account net position. Settings shows the signed-in account and LifeOS regional defaults. Hosting is not deployed. See docs/FIREBASE_SETUP.md, docs/FIRESTORE_DATA_MODEL.md, and docs/ARCHITECTURE.md. No paid service should be enabled without explicit approval.
 

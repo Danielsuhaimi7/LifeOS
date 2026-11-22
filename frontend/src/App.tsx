@@ -6,7 +6,7 @@ import {
   Routes,
   useLocation,
 } from "react-router";
-import { Button, Card } from "./components/ui";
+import { Button } from "./components/ui";
 import {
   AuthLoadingPage,
   FirebaseSetupPage,
@@ -19,6 +19,7 @@ import { NotesPage } from "./notes/NotesPage";
 import { DashboardPage } from "./dashboard/DashboardPage";
 import { SearchPage } from "./search/SearchPage";
 import { FinancePage } from "./finance/FinancePage";
+import { SettingsPage } from "./settings/SettingsPage";
 
 type NavigationItem = {
   label: string;
@@ -120,7 +121,7 @@ function AppLayout() {
             <Route path="/notes" element={<NotesPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/finance" element={<FinancePage />} />
-            <Route path="/settings" element={<SectionPage title="Settings" />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
@@ -190,22 +191,6 @@ function NavigationLink({
       <span className="nav-dot" aria-hidden="true" />
       {item.label}
     </NavLink>
-  );
-}
-
-function SectionPage({ title }: { title: string }) {
-  return (
-    <div className="section-page">
-      <p className="text-eyebrow">LIFEOS</p>
-      <h1 className="heading-display">{title}</h1>
-      <Card className="section-placeholder">
-        <strong>{title} is ready for its feature ticket.</strong>
-        <p className="text-muted">
-          This section has a working route. Its tools and content will be added
-          in a later step.
-        </p>
-      </Card>
-    </div>
   );
 }
 
