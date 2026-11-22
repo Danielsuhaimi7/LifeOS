@@ -68,12 +68,13 @@ function accountTypeLabel(type: LifeAccount["type"]) {
 function transactionResult(item: LifeTransaction, query: string, categories: LifeCategory[], accounts: LifeAccount[]): SearchResult | null {
   const category = categories.find((value) => value.id === item.categoryId)?.name ?? "";
   const account = accounts.find((value) => value.id === item.accountId)?.name ?? "";
+  const destination = accounts.find((value) => value.id === item.toAccountId)?.name ?? "";
   const kind = item.kind === "income" ? "Income" : item.kind === "expense" ? "Expense" : "Transfer";
-  const match = matching([kind, category, item.memo, account], query);
+  const match = matching([kind, category, item.memo, account, destination], query);
   if (!match) return null;
   const date = new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", day: "2-digit", month: "2-digit", year: "numeric" }).format(item.occurredAt.toDate());
-  const title = category || `${kind} transaction`;
-  return { id: item.id, kind: "transactions", title, snippet: snippet([kind, account, item.memo ?? "", date].filter(Boolean).join(" · "), query), updatedAt: item.updatedAt?.toMillis?.() ?? 0, href: "/finance", label: `${kind} · ${amountLabel(item.amountSen)}` };
+  const title = item.kind === "transfer" ? "Transfer" : category || `${kind} transaction`;
+  return { id: item.id, kind: "transactions", title, snippet: snippet([kind, account, destination && `to ${destination}`, item.memo ?? "", date].filter(Boolean).join(" · "), query), updatedAt: item.updatedAt?.toMillis?.() ?? 0, href: "/finance", label: `${kind} · ${amountLabel(item.amountSen)}` };
 }
 
 function amountLabel(amountSen: number) {
@@ -158,6 +159,6 @@ export function SearchPage() {
       <div className="search-filters" role="group" aria-label="Filter results">{filters.map((filter) => <button aria-pressed={activeFilter === filter.id} className={activeFilter === filter.id ? "search-filter is-selected" : "search-filter"} key={filter.id} onClick={() => changeFilter(filter.id)} type="button">{filter.label}{query.trim() && <span>{counts[filter.id]}</span>}</button>)}</div>
       {loading ? <div className="search-empty"><p>Searching your private records…</p></div> : !query.trim() ? <div className="search-empty"><span aria-hidden="true">⌕</span><h2>What are you looking for?</h2><p>Search your tasks, appointments, and notes by title or details.</p></div> : results.length === 0 ? <div className="search-empty"><span aria-hidden="true">⌕</span><h2>No results for “{query.trim()}”</h2><p>Try another word or search across a different section.</p></div> : <div className="search-results" aria-live="polite"><p className="search-result-count">{results.length} {results.length === 1 ? "result" : "results"}</p>{results.map((item) => <article className="search-result" key={`${item.kind}-${item.id}`}><div className={`search-result-mark search-result-mark--${item.kind}`} aria-hidden="true">{item.kind === "tasks" ? "✓" : item.kind === "appointments" ? "◷" : "✎"}</div><div className="search-result-main"><div className="search-result-title"><span>{item.label}</span><h2>{item.title || "Untitled"}</h2></div><p>{item.snippet}</p></div><NavLink aria-label={`Open ${item.label.toLocaleLowerCase()} section`} to={item.href}>Open <span aria-hidden="true">↗</span></NavLink></article>)}</div>}
     </Card>
-    <p className="search-scope-note">Results are private to your account. Transfers will be searchable when transfer tracking is added.</p>
+    <p className="search-scope-note">Results are private to your account. Transfers can be found by type, account, destination, or note.</p>
   </div>;
 }
