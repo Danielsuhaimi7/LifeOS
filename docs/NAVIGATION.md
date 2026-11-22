@@ -9,7 +9,7 @@
 
 Desktop shows all sections in the sidebar. Mobile keeps Home, Tasks, Calendar, and Finance in the bottom bar; Notes and Settings are available from More. React Router handles client-side navigation and active states. Firebase Hosting rewrites app paths to index.html for direct links and refreshes.
 
-The Tasks route now provides task management from LOS-006. Calendar, Notes, Finance, and Settings still render placeholders for their later feature tickets.
+The Tasks route provides task management from LOS-006/LOS-007. Calendar provides month and week navigation plus appointment management from LOS-008. Notes, Finance, and Settings remain placeholders for their later feature tickets.
 
 
 

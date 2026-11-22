@@ -13,7 +13,8 @@ service cloud.firestore {
     //   dueAt/completedAt nullable timestamps; recurrenceId/occurrenceDate nullable; timestamps.
     // users/{uid}/appointments/{id}: title 1..160; details nullable <=2000;
     //   location nullable <=200; startAt/endAt timestamps (endAt > startAt);
-    //   allDay bool; timeZone='Asia/Kuala_Lumpur'; createdAt/updatedAt.
+    //   allDay bool; timeZone='Asia/Kuala_Lumpur'; taskId nullable task reference;
+    //   createdAt/updatedAt.
     // users/{uid}/notes/{noteId}: title 1..160; body <=20000;
     //   folderId nullable safe ID <=128; createdAt/updatedAt timestamps.
     // users/{uid}/accounts/{accountId}: name 1..80; type cash|bank|investment|
@@ -29,8 +30,8 @@ service cloud.firestore {
     // users/{uid}/taskSeries/{seriesId}: task template, frequency, interval, date range,
     //   anchor day, active state and current occurrence ID.
     // Child records do not repeat ownerUid: their parent path is the ownership key.
-    // Recurrence, bills, loans, savings goals, assets, and reports are deferred to
-    // their feature tickets so their data shapes can follow actual requirements.
+    // Bills, loans, savings goals, assets, and reports are deferred to their
+    // feature tickets so their data shapes can follow actual requirements.
     // =============================================================
 
     function isAuthenticated() {
@@ -195,11 +196,11 @@ service cloud.firestore {
       return data is map &&
         data.keys().hasAll([
           'title', 'details', 'location', 'startAt', 'endAt', 'allDay',
-          'timeZone', 'createdAt', 'updatedAt'
+          'timeZone', 'taskId', 'createdAt', 'updatedAt'
         ]) &&
         data.keys().hasOnly([
           'title', 'details', 'location', 'startAt', 'endAt', 'allDay',
-          'timeZone', 'createdAt', 'updatedAt'
+          'timeZone', 'taskId', 'createdAt', 'updatedAt'
         ]) &&
         validText(data.title, 1, 160) &&
         validNullableText(data.details, 2000) &&
@@ -207,7 +208,14 @@ service cloud.firestore {
         data.startAt is timestamp && data.endAt is timestamp &&
         data.endAt > data.startAt && data.allDay is bool &&
         data.timeZone == 'Asia/Kuala_Lumpur' &&
+        validNullableId(data.taskId) &&
         validCommonTimestamps(data);
+    }
+
+    function validAppointmentTaskReference(userId, data) {
+      return data.taskId == null ||
+        (validSafeId(data.taskId) &&
+          exists(/databases/$(database)/documents/users/$(userId)/tasks/$(data.taskId)));
     }
 
     function isValidNote(data) {
@@ -346,9 +354,11 @@ service cloud.firestore {
         allow read: if hasParentProfile(userId);
         allow create: if hasParentProfile(userId) &&
           isValidAppointment(request.resource.data) &&
+          validAppointmentTaskReference(userId, request.resource.data) &&
           createdAndUpdatedNow(request.resource.data);
         allow update: if hasParentProfile(userId) &&
           isValidAppointment(request.resource.data) &&
+          validAppointmentTaskReference(userId, request.resource.data) &&
           createdAtUnchanged(request.resource.data) &&
           updatedNow(request.resource.data);
         allow delete: if hasParentProfile(userId);

@@ -16,6 +16,7 @@
 - docs/FIREBASE_SETUP.md — local Firebase and Google sign-in setup.
 - docs/FIRESTORE_DATA_MODEL.md — owner-scoped collections, field schemas, and Firestore write conventions.
 - frontend/src/tasks/ — Firestore task and recurring-series repositories plus the responsive task management page.
+- frontend/src/calendar/ — Firestore appointment repository and responsive calendar/agenda page.
 - docs/NAVIGATION.md — desktop/mobile navigation and feature route status.
 - docs/DECISIONS.md — provisional choices and open questions.
 - docs/DESIGN_SYSTEM.md — UI conventions and component usage.
@@ -23,5 +24,5 @@
 - AGENTS.md — repository-wide guidance.
 - .codex/agents/ — LifeOS-specific role instructions.
 
-Google Authentication and task Firestore data access exist. The task and recurring-series rules must be deployed before cloud task operations work. Calendar, Notes, Finance, and Settings remain placeholders.
+Google Authentication, task management, recurring tasks, and appointment calendar data access exist. The LOS-005, LOS-007, and LOS-008 rules must be deployed before cloud task and appointment operations work. Notes, Finance, and Settings remain placeholders.
 
