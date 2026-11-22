@@ -18,6 +18,7 @@ import { CalendarPage } from "./calendar/CalendarPage";
 import { NotesPage } from "./notes/NotesPage";
 import { DashboardPage } from "./dashboard/DashboardPage";
 import { SearchPage } from "./search/SearchPage";
+import { FinancePage } from "./finance/FinancePage";
 
 type NavigationItem = {
   label: string;
@@ -118,7 +119,7 @@ function AppLayout() {
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/notes" element={<NotesPage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/finance" element={<SectionPage title="Finance" />} />
+            <Route path="/finance" element={<FinancePage />} />
             <Route path="/settings" element={<SectionPage title="Settings" />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

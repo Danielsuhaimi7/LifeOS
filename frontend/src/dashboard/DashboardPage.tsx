@@ -111,6 +111,6 @@ export function DashboardPage() {
     </div>
 
     <section className="dashboard-quick-actions" aria-label="Quick actions"><div><p className="text-eyebrow">A FEW SHORTCUTS</p><h2>What would you like to do?</h2></div><div className="dashboard-action-links"><NavLink to="/tasks"><span aria-hidden="true">＋</span><strong>Add a task</strong></NavLink><NavLink to="/calendar"><span aria-hidden="true">◷</span><strong>Plan an appointment</strong></NavLink><NavLink to="/notes"><span aria-hidden="true">✎</span><strong>Write a note</strong></NavLink></div></section>
-    <p className="dashboard-finance-note">Your finance overview will appear here as account and transaction features are added.</p>
+    <p className="dashboard-finance-note">Finance summaries will appear here as transaction and planning features are added.</p>
   </div>;
 }
