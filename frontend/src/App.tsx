@@ -17,6 +17,7 @@ import { TasksPage } from "./tasks/TasksPage";
 import { CalendarPage } from "./calendar/CalendarPage";
 import { NotesPage } from "./notes/NotesPage";
 import { DashboardPage } from "./dashboard/DashboardPage";
+import { SearchPage } from "./search/SearchPage";
 
 type NavigationItem = {
   label: string;
@@ -96,6 +97,7 @@ function AppLayout() {
         <header className="topbar">
           <span className="text-eyebrow">YOUR PERSONAL SPACE</span>
           <div className="account-actions">
+            <NavLink aria-label="Search LifeOS" className={({ isActive }) => isActive ? "topbar-search is-active" : "topbar-search"} to="/search"><span aria-hidden="true">⌕</span><span>Search</span></NavLink>
             {user?.displayName && <span className="account-name">{user.displayName}</span>}
             <Button
               aria-label="Sign out"
@@ -115,6 +117,7 @@ function AppLayout() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/notes" element={<NotesPage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/finance" element={<SectionPage title="Finance" />} />
             <Route path="/settings" element={<SectionPage title="Settings" />} />
             <Route path="*" element={<NotFoundPage />} />

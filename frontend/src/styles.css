@@ -454,6 +454,47 @@ a {
   .dashboard-summary-card strong { font-size: 1.4rem; }
   .dashboard-action-links { display: grid; width: 100%; grid-template-columns: 1fr; }
 }
+
+.topbar-search { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 38px; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0 var(--space-3); color: var(--color-text-muted); background: var(--color-surface); font-size: var(--font-size-xs); }
+.topbar-search > span:first-child { font-size: 1.1rem; line-height: 1; }
+.topbar-search:hover, .topbar-search.is-active { border-color: var(--color-accent); color: var(--color-accent-strong); background: var(--color-surface-subtle); }
+.search-page { width: min(920px, 100%); margin: 0 auto; padding: var(--space-8) 0 var(--space-12); }
+.search-heading { margin-bottom: var(--space-6); }
+.search-heading .heading-display { margin: var(--space-2) 0; }
+.search-heading .text-body { margin: 0; }
+.search-panel { padding: clamp(var(--space-4), 4vw, var(--space-8)); }
+.search-input-wrap { display: flex; align-items: center; gap: var(--space-3); min-height: 58px; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0 var(--space-4); background: var(--color-background); }
+.search-input-wrap > span { color: var(--color-accent-strong); font-size: 1.45rem; }
+.search-input-wrap input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--color-text); background: transparent; font: inherit; font-size: var(--font-size-md); }
+.search-input-wrap input::placeholder { color: var(--color-text-subtle); }
+.search-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-4) 0; border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-3); }
+.search-filter { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 34px; border: 0; border-radius: var(--radius-pill); padding: 0 var(--space-3); color: var(--color-text-muted); background: transparent; font: inherit; font-size: var(--font-size-xs); cursor: pointer; }
+.search-filter.is-selected { color: var(--color-accent-strong); background: var(--color-surface-subtle); font-weight: 600; }
+.search-filter > span { min-width: 18px; border-radius: var(--radius-pill); padding: 1px 5px; background: color-mix(in srgb, var(--color-border) 60%, transparent); font-size: 0.65rem; text-align: center; }
+.search-empty { display: grid; min-height: 260px; align-content: center; justify-items: center; gap: var(--space-2); text-align: center; }
+.search-empty > span { color: var(--color-accent-strong); font-size: 2rem; }
+.search-empty h2 { margin: var(--space-1) 0 0; font-size: var(--font-size-lg); }
+.search-empty p { max-width: 390px; margin: 0; color: var(--color-text-muted); font-size: var(--font-size-sm); line-height: var(--line-height-body); }
+.search-results { display: grid; }
+.search-result-count { margin: 0 0 var(--space-2); color: var(--color-text-subtle); font-size: var(--font-size-xs); }
+.search-result { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: start; gap: var(--space-3); border-bottom: 1px solid var(--color-border); padding: var(--space-4) 0; }
+.search-result:last-child { border-bottom: 0; }
+.search-result-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: var(--radius-md); color: var(--color-accent-strong); background: var(--color-surface-subtle); }
+.search-result-title > span { color: var(--color-text-subtle); font-size: 0.68rem; }
+.search-result-title h2 { overflow-wrap: anywhere; margin: 2px 0 0; font-size: var(--font-size-sm); }
+.search-result-main > p { margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--font-size-xs); line-height: var(--line-height-body); overflow-wrap: anywhere; }
+.search-result > a { align-self: center; color: var(--color-accent-strong); font-size: var(--font-size-xs); font-weight: 600; white-space: nowrap; }
+.search-result > a span { padding-left: 3px; }
+.search-scope-note { margin: var(--space-4) 0 0; color: var(--color-text-subtle); font-size: var(--font-size-xs); text-align: right; }
+
+@media (max-width: 720px) {
+  .search-page { padding: var(--space-5) 0; }
+  .search-result { grid-template-columns: 34px minmax(0, 1fr); gap: var(--space-2); }
+  .search-result-mark { width: 30px; height: 30px; }
+  .search-result-main { min-width: 0; }
+  .search-result > a { grid-column: 2; justify-self: start; margin-top: var(--space-1); }
+  .search-scope-note { text-align: left; }
+}
 .auth-screen {
   display: grid;
   min-height: 100svh;
