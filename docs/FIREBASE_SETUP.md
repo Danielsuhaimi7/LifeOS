@@ -1,6 +1,6 @@
-﻿# Firebase local setup
+# Firebase local setup
 
-LOS-004 adds Firebase Authentication with Google sign-in. The repository intentionally contains no Firebase project selection or credentials. Create a Firebase project and web app in your own Firebase account, then configure it locally.
+LOS-004 adds Firebase Authentication with Google sign-in. The LifeOS Firebase project already has its web app and Google provider enabled, and LOS-005 provisions an empty Standard Firestore database in Singapore. The repository intentionally contains no Firebase project selection or credentials. Keep project values in local ignored files. Use the setup steps below only when configuring another local environment or Firebase project.
 
 ## 1. Create the Firebase web app
 
@@ -39,3 +39,7 @@ npm run dev
 ```
 
 See the official Firebase guides for [Google sign-in on the web](https://firebase.google.com/docs/auth/web/google-signin) and [web auth state](https://firebase.google.com/docs/auth/web/start#auth_state_observer).
+
+## Firestore deployment status
+
+The database was created in production mode with default-deny rules. The prototype in backend/firestore.rules has not been deployed; deploy it only after review. No user records exist yet. Scheduled backups are not enabled because Firebase requires a paid Blaze plan for that feature.

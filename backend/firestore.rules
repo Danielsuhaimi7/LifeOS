@@ -1,10 +1,347 @@
-﻿rules_version = '2';
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // =============================================================
+    // Assumed private data model (one owner per users/{uid} tree)
+    // =============================================================
+    // users/{uid}: ownerUid string; displayName nullable string <=80;
+    //   timeZone='Asia/Kuala_Lumpur'; currency='MYR';
+    //   dateFormat='DD/MM/YYYY'; weekStartsOn=0; createdAt/updatedAt timestamps.
+    // users/{uid}/tasks/{taskId}: title 1..160; description nullable <=4000;
+    //   status todo|inProgress|done|cancelled; priority low|normal|high;
+    //   dueAt/completedAt nullable timestamps; createdAt/updatedAt timestamps.
+    // users/{uid}/appointments/{id}: title 1..160; details nullable <=2000;
+    //   location nullable <=200; startAt/endAt timestamps (endAt > startAt);
+    //   allDay bool; timeZone='Asia/Kuala_Lumpur'; createdAt/updatedAt.
+    // users/{uid}/notes/{noteId}: title 1..160; body <=20000;
+    //   folderId nullable safe ID <=128; createdAt/updatedAt timestamps.
+    // users/{uid}/accounts/{accountId}: name 1..80; type cash|bank|investment|
+    //   creditCard|other; currency='MYR'; openingBalanceSen int within +/-9,999,999,999;
+    //   archived bool; createdAt/updatedAt timestamps.
+    // users/{uid}/categories/{categoryId}: name 1..60; kind income|expense;
+    //   colorKey nullable <=32; archived bool; createdAt/updatedAt timestamps.
+    // users/{uid}/transactions/{transactionId}: kind income|expense|transfer;
+    //   amountSen positive int <=9,999,999,999; occurredAt timestamp;
+    //   accountId safe ID; toAccountId/categoryId nullable safe IDs; memo nullable <=1000;
+    //   createdAt/updatedAt timestamps. Transfers require distinct active accounts
+    //   and cannot have a category. Other kinds may reference a matching category.
+    // Child records do not repeat ownerUid: their parent path is the ownership key.
+    // Recurrence, bills, loans, savings goals, assets, and reports are deferred to
+    // their feature tickets so their data shapes can follow actual requirements.
+    // =============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
     }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Only the private profile document stores ownerUid. Child collection paths
+    // are already scoped to the UID and intentionally omit duplicated identity.
+    function isDocOwner() {
+      return isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    function uidUnchanged() {
+      return isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return request.resource.data.ownerUid == resource.data.ownerUid;
+    }
+
+    function hasUserProfile(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId));
+    }
+
+    function validText(value, minLength, maxLength) {
+      return value is string && value.size() >= minLength && value.size() <= maxLength;
+    }
+
+    function validNullableText(value, maxLength) {
+      return value == null || validText(value, 0, maxLength);
+    }
+
+    function validSafeId(value) {
+      return value is string && value.matches('^[A-Za-z0-9_-]{1,128}$');
+    }
+
+    function validNullableId(value) {
+      return value == null || validSafeId(value);
+    }
+
+    function validCommonTimestamps(data) {
+      return data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+
+    function createdAndUpdatedNow(data) {
+      return data.createdAt == request.time && data.updatedAt == request.time;
+    }
+
+    function updatedNow(data) {
+      return data.updatedAt == request.time;
+    }
+
+    function createdAtUnchanged(data) {
+      return data.createdAt == resource.data.createdAt;
+    }
+
+    function isValidUser(data, userId) {
+      return data is map &&
+        data.keys().hasAll([
+          'ownerUid', 'displayName', 'timeZone', 'currency', 'dateFormat',
+          'weekStartsOn', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerUid', 'displayName', 'timeZone', 'currency', 'dateFormat',
+          'weekStartsOn', 'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerUid == userId &&
+        validNullableText(data.displayName, 80) &&
+        data.timeZone == 'Asia/Kuala_Lumpur' &&
+        data.currency == 'MYR' &&
+        data.dateFormat == 'DD/MM/YYYY' &&
+        data.weekStartsOn == 0 &&
+        validCommonTimestamps(data);
+    }
+
+    function isValidTask(data) {
+      return data is map &&
+        data.keys().hasAll([
+          'title', 'description', 'status', 'priority', 'dueAt', 'completedAt',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'title', 'description', 'status', 'priority', 'dueAt', 'completedAt',
+          'createdAt', 'updatedAt'
+        ]) &&
+        validText(data.title, 1, 160) &&
+        validNullableText(data.description, 4000) &&
+        data.status in ['todo', 'inProgress', 'done', 'cancelled'] &&
+        data.priority in ['low', 'normal', 'high'] &&
+        (data.dueAt == null || data.dueAt is timestamp) &&
+        (data.completedAt == null ||
+          (data.completedAt is timestamp && data.completedAt <= request.time &&
+            data.completedAt >= data.createdAt)) &&
+        ((data.status == 'done' && data.completedAt is timestamp) ||
+          (data.status != 'done' && data.completedAt == null)) &&
+        validCommonTimestamps(data);
+    }
+
+    function validTaskCompletionUpdate(data) {
+      return (data.status == resource.data.status &&
+          data.completedAt == resource.data.completedAt) ||
+        (data.status == 'done' && resource.data.status != 'done' &&
+          data.completedAt == request.time) ||
+        (resource.data.status == 'done' && data.status != 'done' &&
+          data.completedAt == null);
+    }
+
+    function isValidAppointment(data) {
+      return data is map &&
+        data.keys().hasAll([
+          'title', 'details', 'location', 'startAt', 'endAt', 'allDay',
+          'timeZone', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'title', 'details', 'location', 'startAt', 'endAt', 'allDay',
+          'timeZone', 'createdAt', 'updatedAt'
+        ]) &&
+        validText(data.title, 1, 160) &&
+        validNullableText(data.details, 2000) &&
+        validNullableText(data.location, 200) &&
+        data.startAt is timestamp && data.endAt is timestamp &&
+        data.endAt > data.startAt && data.allDay is bool &&
+        data.timeZone == 'Asia/Kuala_Lumpur' &&
+        validCommonTimestamps(data);
+    }
+
+    function isValidNote(data) {
+      return data is map &&
+        data.keys().hasAll([
+          'title', 'body', 'folderId', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'title', 'body', 'folderId', 'createdAt', 'updatedAt'
+        ]) &&
+        validText(data.title, 1, 160) &&
+        validText(data.body, 0, 20000) &&
+        validNullableId(data.folderId) &&
+        validCommonTimestamps(data);
+    }
+
+    function isValidAccount(data) {
+      return data is map &&
+        data.keys().hasAll([
+          'name', 'type', 'currency', 'openingBalanceSen', 'archived',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'name', 'type', 'currency', 'openingBalanceSen', 'archived',
+          'createdAt', 'updatedAt'
+        ]) &&
+        validText(data.name, 1, 80) &&
+        data.type in ['cash', 'bank', 'investment', 'creditCard', 'other'] &&
+        data.currency == 'MYR' && data.openingBalanceSen is int &&
+        data.openingBalanceSen >= -9999999999 &&
+        data.openingBalanceSen <= 9999999999 &&
+        data.archived is bool && validCommonTimestamps(data);
+    }
+
+    function isValidCategory(data) {
+      return data is map &&
+        data.keys().hasAll([
+          'name', 'kind', 'colorKey', 'archived', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'name', 'kind', 'colorKey', 'archived', 'createdAt', 'updatedAt'
+        ]) &&
+        validText(data.name, 1, 60) &&
+        data.kind in ['income', 'expense'] &&
+        validNullableText(data.colorKey, 32) &&
+        data.archived is bool && validCommonTimestamps(data);
+    }
+
+    function isActiveAccount(userId, accountId) {
+      let accountPath = /databases/$(database)/documents/users/$(userId)/accounts/$(accountId);
+      return validSafeId(accountId) && exists(accountPath) &&
+        get(accountPath).data.archived == false;
+    }
+
+    function isActiveCategory(userId, categoryId, kind) {
+      let categoryPath = /databases/$(database)/documents/users/$(userId)/categories/$(categoryId);
+      return validSafeId(categoryId) && exists(categoryPath) &&
+        get(categoryPath).data.archived == false &&
+        get(categoryPath).data.kind == kind;
+    }
+
+    function validTransactionReferences(userId, data) {
+      return isActiveAccount(userId, data.accountId) &&
+        ((data.kind == 'transfer' && data.toAccountId != data.accountId &&
+            data.categoryId == null && isActiveAccount(userId, data.toAccountId)) ||
+          (data.kind != 'transfer' && data.toAccountId == null &&
+            (data.categoryId == null ||
+              isActiveCategory(userId, data.categoryId, data.kind))));
+    }
+
+    function isValidTransaction(data) {
+      return data is map &&
+        data.keys().hasAll([
+          'kind', 'amountSen', 'occurredAt', 'accountId', 'toAccountId',
+          'categoryId', 'memo', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'kind', 'amountSen', 'occurredAt', 'accountId', 'toAccountId',
+          'categoryId', 'memo', 'createdAt', 'updatedAt'
+        ]) &&
+        data.kind in ['income', 'expense', 'transfer'] &&
+        data.amountSen is int && data.amountSen > 0 &&
+        data.amountSen <= 9999999999 && data.occurredAt is timestamp &&
+        validSafeId(data.accountId) && validNullableId(data.toAccountId) &&
+        validNullableId(data.categoryId) && validNullableText(data.memo, 1000) &&
+        validCommonTimestamps(data);
+    }
+
+    function hasParentProfile(userId) {
+      return isOwner(userId) && hasUserProfile(userId);
+    }
+
+    match /users/{userId} {
+      // Profiles can only be fetched by their owner; listing user profiles is denied.
+      allow get: if isOwner(userId) && isDocOwner();
+      allow list: if false;
+      allow create: if isOwner(userId) && uidUnchanged() &&
+        isValidUser(request.resource.data, userId) &&
+        createdAndUpdatedNow(request.resource.data);
+      allow update: if isOwner(userId) && isDocOwner() && uidNotModified() &&
+        isValidUser(request.resource.data, userId) &&
+        createdAtUnchanged(request.resource.data) &&
+        updatedNow(request.resource.data);
+      // Deleting a profile without deleting its subcollections would orphan data.
+      allow delete: if false;
+
+      match /tasks/{taskId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidTask(request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidTask(request.resource.data) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data) &&
+          validTaskCompletionUpdate(request.resource.data);
+        allow delete: if hasParentProfile(userId);
+      }
+
+      match /appointments/{appointmentId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidAppointment(request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidAppointment(request.resource.data) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data);
+        allow delete: if hasParentProfile(userId);
+      }
+
+      match /notes/{noteId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidNote(request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidNote(request.resource.data) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data);
+        allow delete: if hasParentProfile(userId);
+      }
+
+      match /accounts/{accountId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidAccount(request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidAccount(request.resource.data) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data);
+        // Accounts stay as history anchors; archive them instead of deleting.
+        allow delete: if false;
+      }
+
+      match /categories/{categoryId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidCategory(request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidCategory(request.resource.data) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data);
+        // Categories stay as historical labels; archive them instead of deleting.
+        allow delete: if false;
+      }
+
+      match /transactions/{transactionId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidTransaction(request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data) &&
+          validTransactionReferences(userId, request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidTransaction(request.resource.data) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data) &&
+          validTransactionReferences(userId, request.resource.data);
+        allow delete: if hasParentProfile(userId);
+      }
+    }
+
+    // Default deny: all unmodeled collections and deeper subcollections stay closed.
     match /{document=**} {
       allow read, write: if false;
     }

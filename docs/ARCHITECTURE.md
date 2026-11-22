@@ -1,15 +1,16 @@
-﻿# Architecture
+# Architecture
 
 ## Foundation
 - React + TypeScript + Vite application in frontend/
 - Firebase Hosting and Firestore configuration at the repository root and in backend/
 - Firestore access scoped to /users/{uid}/...
 - shared/ is reserved until shared code is justified
-- Firebase Authentication uses the modular web SDK and Google sign-in; a Firebase project and local web configuration are still required
-- Firestore persistence and deployment are not configured
+- Firebase Authentication uses the modular web SDK and Google sign-in; each developer needs local web configuration in the ignored env file
+- An empty Standard Firestore database exists in asia-southeast1 (Singapore); frontend data access and deployment are not configured
+- Prototype rules are maintained in backend/firestore.rules and have not been deployed
 
 ## Proposed direction
-The newer requirements plan proposes Google sign-in through Firebase Authentication, Cloud Firestore, and Firebase Hosting, subject to cost and reminder feasibility. An earlier plan proposed Express, PostgreSQL, and Prisma. LOS-004 implements the newer Firebase proposal for Google Authentication. Firestore persistence remains a separate decision and must not be added until its data model and backup/export approach are settled.
+The newer requirements plan uses Firebase Authentication and Cloud Firestore Standard on the Spark plan, with Firebase Hosting planned for later. LOS-004 implements Google sign-in. LOS-005 defines the initial owner-scoped model and prototype rules. The frontend has no Firestore CRUD integration yet. Backup and export design remains open before personal records are stored.
 
 ## Constraints
 No paid services without explicit approval. Never commit local environment files, Firebase project selection, secrets, or personal records. Use integer minor units for money. Separate date-only values from timestamps and use Asia/Kuala_Lumpur for local behavior. Do not deploy unless asked.

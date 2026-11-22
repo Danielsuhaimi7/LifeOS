@@ -1,16 +1,17 @@
-﻿# Decisions and open questions
+# Decisions and open questions
 
 ## Provisional decisions
 - Repository: GitHub repository Danielsuhaimi7/LifeOS, replacing the earlier Bitbucket proposal.
 - Frontend: React + TypeScript + Vite, responsive and web-first, with a PWA path.
 - Authentication: Firebase Authentication with Google sign-in, implemented in LOS-004. Firebase project values stay local.
-- Proposed data and hosting services: Cloud Firestore and Firebase Hosting, pending cost and requirements validation.
+- Data: Cloud Firestore Standard, default database in asia-southeast1 (Singapore), on the Spark plan. User data is scoped under /users/{uid}; the database is empty until feature tickets add data access.
+- Hosting: Firebase Hosting is planned but not deployed.
 - Target cost: RM0/month; paid services require explicit approval.
 - Currency/time: MYR in integer sen; DD/MM/YYYY; Asia/Kuala_Lumpur; Sunday week start.
 
 ## Resolve before feature implementation
-- Confirm the persistent data backend (Firestore versus the older Express + PostgreSQL + Prisma proposal) before adding data features.
+- Complete data access through the LOS-005 model and rules; add client CRUD in feature tickets.
 - Validate current Firebase free-tier limits and background reminder feasibility.
-- Decide data model and backup/export approach before storing personal records.
+- Decide backup/export and account deletion flows before storing personal records.
 - Confirm whether the app remains single-user.
 
