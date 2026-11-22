@@ -1,4 +1,5 @@
-﻿import { FirebaseError, getApps, initializeApp } from "firebase/app";
+import { FirebaseError, getApps, initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 import {
   getAuth,
   getRedirectResult,
@@ -34,6 +35,7 @@ const app = firebaseConfigured
   ? getApps().find((existingApp) => existingApp.name === "[DEFAULT]") ?? initializeApp(firebaseConfig)
   : null;
 const auth = app ? getAuth(app) : null;
+export const firestoreDb = app ? getFirestore(app) : null;
 
 export function getGoogleSignInError(error: unknown): string {
   if (!(error instanceof FirebaseError)) {

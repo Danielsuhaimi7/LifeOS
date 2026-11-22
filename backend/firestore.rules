@@ -8,7 +8,7 @@ service cloud.firestore {
     // users/{uid}: ownerUid string; displayName nullable string <=80;
     //   timeZone='Asia/Kuala_Lumpur'; currency='MYR';
     //   dateFormat='DD/MM/YYYY'; weekStartsOn=0; createdAt/updatedAt timestamps.
-    // users/{uid}/tasks/{taskId}: title 1..160; description nullable <=4000;
+    // users/{uid}/tasks/{taskId}: title 1..160; description nullable <=4000; category nullable <=60;
     //   status todo|inProgress|done|cancelled; priority low|normal|high;
     //   dueAt/completedAt nullable timestamps; createdAt/updatedAt timestamps.
     // users/{uid}/appointments/{id}: title 1..160; details nullable <=2000;
@@ -111,15 +111,16 @@ service cloud.firestore {
     function isValidTask(data) {
       return data is map &&
         data.keys().hasAll([
-          'title', 'description', 'status', 'priority', 'dueAt', 'completedAt',
+          'title', 'description', 'category', 'status', 'priority', 'dueAt', 'completedAt',
           'createdAt', 'updatedAt'
         ]) &&
         data.keys().hasOnly([
-          'title', 'description', 'status', 'priority', 'dueAt', 'completedAt',
+          'title', 'description', 'category', 'status', 'priority', 'dueAt', 'completedAt',
           'createdAt', 'updatedAt'
         ]) &&
         validText(data.title, 1, 160) &&
         validNullableText(data.description, 4000) &&
+        validNullableText(data.category, 60) &&
         data.status in ['todo', 'inProgress', 'done', 'cancelled'] &&
         data.priority in ['low', 'normal', 'high'] &&
         (data.dueAt == null || data.dueAt is timestamp) &&
@@ -132,12 +133,11 @@ service cloud.firestore {
     }
 
     function validTaskCompletionUpdate(data) {
-      return (data.status == resource.data.status &&
-          data.completedAt == resource.data.completedAt) ||
-        (data.status == 'done' && resource.data.status != 'done' &&
-          data.completedAt == request.time) ||
-        (resource.data.status == 'done' && data.status != 'done' &&
-          data.completedAt == null);
+      return (data.status == 'done' &&
+          ((resource.data.status == 'done' &&
+              data.completedAt == resource.data.completedAt) ||
+            (resource.data.status != 'done' && data.completedAt == request.time))) ||
+        (data.status != 'done' && data.completedAt == null);
     }
 
     function isValidAppointment(data) {
@@ -251,7 +251,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Profiles can only be fetched by their owner; listing user profiles is denied.
-      allow get: if isOwner(userId) && isDocOwner();
+      allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId) && uidUnchanged() &&
         isValidUser(request.resource.data, userId) &&

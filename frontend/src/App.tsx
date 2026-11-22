@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   NavLink,
@@ -13,6 +13,7 @@ import {
   SignInPage,
 } from "./auth/AuthPages";
 import { FirebaseAuthProvider, useAuth } from "./auth/FirebaseAuthProvider";
+import { TasksPage } from "./tasks/TasksPage";
 
 type NavigationItem = {
   label: string;
@@ -108,7 +109,7 @@ function AppLayout() {
         <div className="page-content" id="main-content" tabIndex={-1}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/tasks" element={<SectionPage title="Tasks" />} />
+            <Route path="/tasks" element={<TasksPage />} />
             <Route path="/calendar" element={<SectionPage title="Calendar" />} />
             <Route path="/notes" element={<SectionPage title="Notes" />} />
             <Route path="/finance" element={<SectionPage title="Finance" />} />
@@ -191,14 +192,13 @@ function HomePage() {
       <p className="text-eyebrow">LIFEOS FOUNDATION</p>
       <h1 className="heading-display">Your life, in one calm place.</h1>
       <p className="text-body">
-        The project workspace is ready. Tasks, calendar, notes, and finance
-        will take shape here one small step at a time.
+        Your tasks are ready to organize. Calendar, notes, and finance will take shape here one small step at a time.
       </p>
       <Card className="welcome-card">
         <span className="welcome-icon" aria-hidden="true">✦</span>
         <div>
           <strong>Starting with a clean foundation</strong>
-          <p className="text-muted">This screen is a scaffold. No personal data is stored yet.</p>
+          <p className="text-muted">Tasks are private to your account and sync through Firestore.</p>
         </div>
       </Card>
     </div>

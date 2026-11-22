@@ -1,4 +1,4 @@
-﻿# LifeOS navigation
+# LifeOS navigation
 
 - Home: /
 - Tasks: /tasks
@@ -9,7 +9,7 @@
 
 Desktop shows all sections in the sidebar. Mobile keeps Home, Tasks, Calendar, and Finance in the bottom bar; Notes and Settings are available from More. React Router handles client-side navigation and active states. Firebase Hosting rewrites app paths to index.html for direct links and refreshes.
 
-Tasks, Calendar, Notes, Finance, and Settings currently render placeholders. Their functionality belongs to later feature tickets.
+The Tasks route now provides task management from LOS-006. Calendar, Notes, Finance, and Settings still render placeholders for their later feature tickets.
 
 
 
