@@ -1,24 +1,32 @@
-﻿# LifeOS project map
+# LifeOS project map
 
 - frontend/ — React + TypeScript + Vite browser app.
-- frontend/src/App.tsx — Firebase auth gate, app shell, responsive navigation, route map, and temporary section pages.
+- frontend/src/App.tsx — Firebase auth gate, app shell, responsive navigation, route map, and feature routes.
 - frontend/src/auth/FirebaseAuthProvider.tsx — Firebase client config, Google sign-in, redirect return handling, auth state, and sign-out.
 - frontend/src/auth/AuthPages.tsx — sign-in, auth loading, and Firebase setup screens.
 - frontend/src/design-system/tokens.css — shared color, typography, spacing, radius, and shadow tokens.
 - frontend/src/design-system/components.css — shared Button and Card styles.
 - frontend/src/components/ui/ — reusable React UI primitives.
-- frontend/src/styles.css — app shell and responsive layout styles.
-- backend/firestore.rules — owner-scoped Firestore rules; review before deployment.
+- frontend/src/styles.css — app shell, responsive layout, and task feature styles.
+- backend/firestore.rules — owner-scoped rules with field validation for tasks and other model collections; review and validate before deployment.
 - backend/firestore.indexes.json — composite indexes, currently empty.
 - firebase.json — Hosting and Firestore CLI configuration; no project selected.
 - docs/PRODUCT_BRIEF.md — product scope and constraints.
 - docs/ARCHITECTURE.md — technical direction and setup.
 - docs/FIREBASE_SETUP.md — local Firebase and Google sign-in setup.
+- docs/FIRESTORE_DATA_MODEL.md — owner-scoped collections, field schemas, and Firestore write conventions.
+- frontend/src/tasks/ — Firestore task and recurring-series repositories plus the responsive task management page.
+- frontend/src/calendar/ — Firestore appointment repository and responsive calendar/agenda page.
+- frontend/src/notes/ — Firestore notes/folders repository and responsive plain-text/checklist editor with autosave.
+- frontend/src/dashboard/ — owner-scoped home dashboard built from tasks and appointments.
+- frontend/src/search/ — owner-scoped live search across tasks, appointments, notes, and accounts.
+- frontend/src/finance/ — owner-scoped account repository and Finance account management page.
+- docs/NAVIGATION.md — desktop/mobile navigation and feature route status.
 - docs/DECISIONS.md — provisional choices and open questions.
 - docs/DESIGN_SYSTEM.md — UI conventions and component usage.
 - docs/NAVIGATION.md — routes and responsive navigation behavior.
 - AGENTS.md — repository-wide guidance.
 - .codex/agents/ — LifeOS-specific role instructions.
 
-Authentication and data access code do not exist yet. The routes other than Home are placeholders, not implemented features.
+Google Authentication, task management, recurring tasks, appointment calendar, notes/folders, account management, task/appointment dashboard, and global search across available records exist. The LOS-005, LOS-007, LOS-008, and LOS-009 rules must be deployed before cloud operations work. Transactions and the Finance overview are planned for later finance tickets; Settings remains a placeholder.
 

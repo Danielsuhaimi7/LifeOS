@@ -1,9 +1,9 @@
-﻿# LifeOS repository guidance
+# LifeOS repository guidance
 
 ## Product direction
 LifeOS is a private, initially single-user app for desktop and iPhone. Build a responsive web app first, with an installable PWA path. Planned areas: tasks, calendar, notes, personal finance, dashboard, search, settings, and backup.
 
-The current proposed stack is React + TypeScript + Vite with Firebase Authentication, Firestore, and Hosting, subject to free-tier and reminder feasibility checks. A previous plan proposed Express + PostgreSQL + Prisma; revisit before authentication or persistent-data implementation. Target RM0/month. Do not enable paid services without explicit approval.
+The confirmed stack is React + TypeScript + Vite with Firebase Authentication and Cloud Firestore Standard. Firebase Hosting is planned but not deployed. The project remains on the Spark plan with an RM0/month target; do not enable paid services or features without explicit approval. An earlier Express + PostgreSQL + Prisma proposal is superseded for authentication and the initial data model.
 
 Use MYR stored as integer sen, display dates as DD/MM/YYYY, use Asia/Kuala_Lumpur for local time, and start calendar weeks on Sunday.
 

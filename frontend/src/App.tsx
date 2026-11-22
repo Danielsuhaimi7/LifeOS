@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   NavLink,
@@ -13,6 +13,12 @@ import {
   SignInPage,
 } from "./auth/AuthPages";
 import { FirebaseAuthProvider, useAuth } from "./auth/FirebaseAuthProvider";
+import { TasksPage } from "./tasks/TasksPage";
+import { CalendarPage } from "./calendar/CalendarPage";
+import { NotesPage } from "./notes/NotesPage";
+import { DashboardPage } from "./dashboard/DashboardPage";
+import { SearchPage } from "./search/SearchPage";
+import { FinancePage } from "./finance/FinancePage";
 
 type NavigationItem = {
   label: string;
@@ -92,6 +98,7 @@ function AppLayout() {
         <header className="topbar">
           <span className="text-eyebrow">YOUR PERSONAL SPACE</span>
           <div className="account-actions">
+            <NavLink aria-label="Search LifeOS" className={({ isActive }) => isActive ? "topbar-search is-active" : "topbar-search"} to="/search"><span aria-hidden="true">⌕</span><span>Search</span></NavLink>
             {user?.displayName && <span className="account-name">{user.displayName}</span>}
             <Button
               aria-label="Sign out"
@@ -107,11 +114,12 @@ function AppLayout() {
 
         <div className="page-content" id="main-content" tabIndex={-1}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/tasks" element={<SectionPage title="Tasks" />} />
-            <Route path="/calendar" element={<SectionPage title="Calendar" />} />
-            <Route path="/notes" element={<SectionPage title="Notes" />} />
-            <Route path="/finance" element={<SectionPage title="Finance" />} />
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/notes" element={<NotesPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/finance" element={<FinancePage />} />
             <Route path="/settings" element={<SectionPage title="Settings" />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
@@ -182,26 +190,6 @@ function NavigationLink({
       <span className="nav-dot" aria-hidden="true" />
       {item.label}
     </NavLink>
-  );
-}
-
-function HomePage() {
-  return (
-    <div className="welcome">
-      <p className="text-eyebrow">LIFEOS FOUNDATION</p>
-      <h1 className="heading-display">Your life, in one calm place.</h1>
-      <p className="text-body">
-        The project workspace is ready. Tasks, calendar, notes, and finance
-        will take shape here one small step at a time.
-      </p>
-      <Card className="welcome-card">
-        <span className="welcome-icon" aria-hidden="true">✦</span>
-        <div>
-          <strong>Starting with a clean foundation</strong>
-          <p className="text-muted">This screen is a scaffold. No personal data is stored yet.</p>
-        </div>
-      </Card>
-    </div>
   );
 }
 

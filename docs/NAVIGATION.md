@@ -1,15 +1,16 @@
-﻿# LifeOS navigation
+# LifeOS navigation
 
 - Home: /
 - Tasks: /tasks
 - Calendar: /calendar
 - Notes: /notes
+- Search: /search
 - Finance: /finance
 - Settings: /settings
 
 Desktop shows all sections in the sidebar. Mobile keeps Home, Tasks, Calendar, and Finance in the bottom bar; Notes and Settings are available from More. React Router handles client-side navigation and active states. Firebase Hosting rewrites app paths to index.html for direct links and refreshes.
 
-Tasks, Calendar, Notes, Finance, and Settings currently render placeholders. Their functionality belongs to later feature tickets.
+Home is the LOS-010 dashboard with today's tasks, overdue counts, upcoming appointments, and quick links. Search in the top bar opens LOS-011 Global Search across tasks, appointments, notes, and accounts. Transaction search will extend as finance records are implemented. The Tasks route provides task management from LOS-006/LOS-007. Calendar provides month and week navigation plus appointment management from LOS-008. Notes provides plain-text and checklist notes, folders, autosave, and optional links from LOS-009. Finance provides account management from LOS-012; transactions and account activity are planned for LOS-013 onward. Settings remains a placeholder.
 
 
 
