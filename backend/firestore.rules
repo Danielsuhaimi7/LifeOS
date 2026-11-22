@@ -10,7 +10,7 @@ service cloud.firestore {
     //   dateFormat='DD/MM/YYYY'; weekStartsOn=0; createdAt/updatedAt timestamps.
     // users/{uid}/tasks/{taskId}: title 1..160; description nullable <=4000; category nullable <=60;
     //   status todo|inProgress|done|cancelled; priority low|normal|high;
-    //   dueAt/completedAt nullable timestamps; createdAt/updatedAt timestamps.
+    //   dueAt/completedAt nullable timestamps; recurrenceId/occurrenceDate nullable; timestamps.
     // users/{uid}/appointments/{id}: title 1..160; details nullable <=2000;
     //   location nullable <=200; startAt/endAt timestamps (endAt > startAt);
     //   allDay bool; timeZone='Asia/Kuala_Lumpur'; createdAt/updatedAt.
@@ -26,6 +26,8 @@ service cloud.firestore {
     //   accountId safe ID; toAccountId/categoryId nullable safe IDs; memo nullable <=1000;
     //   createdAt/updatedAt timestamps. Transfers require distinct active accounts
     //   and cannot have a category. Other kinds may reference a matching category.
+    // users/{uid}/taskSeries/{seriesId}: task template, frequency, interval, date range,
+    //   anchor day, active state and current occurrence ID.
     // Child records do not repeat ownerUid: their parent path is the ownership key.
     // Recurrence, bills, loans, savings goals, assets, and reports are deferred to
     // their feature tickets so their data shapes can follow actual requirements.
@@ -112,10 +114,12 @@ service cloud.firestore {
       return data is map &&
         data.keys().hasAll([
           'title', 'description', 'category', 'status', 'priority', 'dueAt', 'completedAt',
+          'recurrenceId', 'occurrenceDate',
           'createdAt', 'updatedAt'
         ]) &&
         data.keys().hasOnly([
           'title', 'description', 'category', 'status', 'priority', 'dueAt', 'completedAt',
+          'recurrenceId', 'occurrenceDate',
           'createdAt', 'updatedAt'
         ]) &&
         validText(data.title, 1, 160) &&
@@ -129,6 +133,53 @@ service cloud.firestore {
             data.completedAt >= data.createdAt)) &&
         ((data.status == 'done' && data.completedAt is timestamp) ||
           (data.status != 'done' && data.completedAt == null)) &&
+        validCommonTimestamps(data);
+    }
+
+    function validDateKey(value) {
+      return value is string && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function validTaskRecurrence(data, userId) {
+      return (data.recurrenceId == null && data.occurrenceDate == null) ||
+        (validSafeId(data.recurrenceId) && validDateKey(data.occurrenceDate) &&
+          existsAfter(/databases/$(database)/documents/users/$(userId)/taskSeries/$(data.recurrenceId)));
+    }
+
+    function recurrenceFieldsUnchangedOrLinked(data, userId) {
+      return (data.recurrenceId == resource.data.recurrenceId &&
+          data.occurrenceDate == resource.data.occurrenceDate) ||
+        (resource.data.recurrenceId == null && data.recurrenceId != null &&
+          validTaskRecurrence(data, userId));
+    }
+
+    function isValidTaskSeries(data, userId) {
+      return data is map &&
+        data.keys().hasAll([
+          'title', 'description', 'category', 'priority', 'frequency', 'interval',
+          'startDate', 'endDate', 'anchorDay', 'anchorWeekday', 'currentOccurrenceId', 'active',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'title', 'description', 'category', 'priority', 'frequency', 'interval',
+          'startDate', 'endDate', 'anchorDay', 'anchorWeekday', 'currentOccurrenceId', 'active',
+          'createdAt', 'updatedAt'
+        ]) &&
+        validText(data.title, 1, 160) &&
+        validNullableText(data.description, 4000) &&
+        validNullableText(data.category, 60) &&
+        data.priority in ['low', 'normal', 'high'] &&
+        data.frequency in ['daily', 'weekly', 'monthly'] &&
+        data.interval is int && data.interval >= 1 && data.interval <= 30 &&
+        validDateKey(data.startDate) &&
+        (data.endDate == null ||
+          (validDateKey(data.endDate) && data.endDate >= data.startDate)) &&
+        data.anchorDay is int && data.anchorDay >= 1 && data.anchorDay <= 31 &&
+        data.anchorWeekday is int && data.anchorWeekday >= 0 && data.anchorWeekday <= 6 &&
+        data.active is bool &&
+        (data.currentOccurrenceId == null || validSafeId(data.currentOccurrenceId)) &&
+        (!data.active || (data.currentOccurrenceId is string &&
+          existsAfter(/databases/$(database)/documents/users/$(userId)/tasks/$(data.currentOccurrenceId)))) &&
         validCommonTimestamps(data);
     }
 
@@ -267,13 +318,28 @@ service cloud.firestore {
         allow read: if hasParentProfile(userId);
         allow create: if hasParentProfile(userId) &&
           isValidTask(request.resource.data) &&
+          validTaskRecurrence(request.resource.data, userId) &&
           createdAndUpdatedNow(request.resource.data);
         allow update: if hasParentProfile(userId) &&
           isValidTask(request.resource.data) &&
+          validTaskRecurrence(request.resource.data, userId) &&
+          recurrenceFieldsUnchangedOrLinked(request.resource.data, userId) &&
           createdAtUnchanged(request.resource.data) &&
           updatedNow(request.resource.data) &&
           validTaskCompletionUpdate(request.resource.data);
         allow delete: if hasParentProfile(userId);
+      }
+
+      match /taskSeries/{seriesId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidTaskSeries(request.resource.data, userId) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidTaskSeries(request.resource.data, userId) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data);
+        allow delete: if false;
       }
 
       match /appointments/{appointmentId} {

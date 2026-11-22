@@ -816,3 +816,17 @@ a {
     min-height: 32px;
   }
 }
+.task-repeat-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-2);
+  color: var(--color-accent-strong);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+  font-size: 0.68rem;
+}
+
+.task-repeat-grid {
+  margin-top: var(--space-2);
+}

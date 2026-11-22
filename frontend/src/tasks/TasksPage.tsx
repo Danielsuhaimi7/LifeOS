@@ -8,23 +8,32 @@ import {
   ensureUserProfile,
   removeTask,
   setTaskCompleted,
+  subscribeToTaskSeries,
   subscribeToTasks,
+  undoTaskCompletion,
   timestampFromDateInput,
   updateTask,
   type LifeTask,
+  type RecurrenceInput,
+  type RepeatFrequency,
   type TaskInput,
+  type TaskSeries,
   type TaskPriority,
   type TaskStatus,
 } from "./taskRepository";
 
 type TaskFilter = "all" | "today" | "upcoming" | "overdue" | "completed";
 type TaskFormState = {
-title: string;
-description: string;
-category: string;
-status: TaskStatus;
-priority: TaskPriority;
-dueDate: string;
+  title: string;
+  description: string;
+  category: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: string;
+  repeatFrequency: "none" | RepeatFrequency;
+  repeatInterval: string;
+  repeatStartDate: string;
+  repeatEndDate: string;
 };
 
 const emptyForm: TaskFormState = {
@@ -34,6 +43,10 @@ const emptyForm: TaskFormState = {
   status: "todo",
   priority: "normal",
   dueDate: "",
+  repeatFrequency: "none",
+  repeatInterval: "1",
+  repeatStartDate: "",
+  repeatEndDate: "",
 };
 
 const filters: { id: TaskFilter; label: string }[] = [
@@ -46,7 +59,7 @@ const filters: { id: TaskFilter; label: string }[] = [
 
 function errorMessage(error: unknown): string {
   if (error instanceof FirebaseError && error.code === "permission-denied") {
-    return "Firestore denied this request. Check that the reviewed LOS-005 rules are deployed and that your profile is available.";
+    return "Firestore denied this request. Check that the reviewed LOS-005 and LOS-007 rules are deployed and that your profile is available.";
   }
   if (error instanceof FirebaseError && error.code === "unavailable") {
     return "LifeOS could not reach Firestore. Check your connection and try again.";
@@ -75,6 +88,18 @@ function dueDateLabel(task: LifeTask): string {
   }).format(task.dueAt.toDate());
 }
 
+function repeatLabel(series: TaskSeries): string {
+  if (!series.active) return "Repeat ended";
+  const names: Record<RepeatFrequency, string> = {
+    daily: "daily",
+    weekly: "weekly",
+    monthly: "monthly",
+  };
+  return series.interval === 1
+    ? "Repeats " + names[series.frequency]
+    : "Every " + series.interval + " " + series.frequency;
+}
+
 function statusLabel(status: TaskStatus): string {
   switch (status) {
     case "inProgress": return "In progress";
@@ -86,11 +111,13 @@ function statusLabel(status: TaskStatus): string {
 
 function TaskEditor({
   initialTask,
+  initialSeries,
   saving,
   onSave,
   onCancel,
 }: {
   initialTask: LifeTask | null;
+  initialSeries: TaskSeries | null;
   saving: boolean;
   onSave: (input: TaskInput) => Promise<void>;
   onCancel: () => void;
@@ -102,7 +129,11 @@ function TaskEditor({
     status: initialTask.status,
     priority: initialTask.priority,
     dueDate: dateInputValue(initialTask.dueAt),
-  } : emptyForm);
+    repeatFrequency: initialSeries?.active ? initialSeries.frequency : "none",
+    repeatInterval: String(initialSeries?.interval ?? 1),
+    repeatStartDate: initialSeries?.startDate ?? (dateInputValue(initialTask.dueAt) || dateKey(new Date())),
+    repeatEndDate: initialSeries?.endDate ?? "",
+  } : { ...emptyForm, repeatStartDate: dateKey(new Date()) });
   const [formError, setFormError] = useState<string | null>(null);
 
   function update<K extends keyof TaskFormState>(key: K, value: TaskFormState[K]) {
@@ -121,6 +152,26 @@ function TaskEditor({
       return;
     }
 
+    const startDate = form.repeatStartDate || form.dueDate || dateKey(new Date());
+    const interval = Number(form.repeatInterval);
+    let recurrence: RecurrenceInput | null = null;
+    if (form.repeatFrequency !== "none") {
+      if (!Number.isInteger(interval) || interval < 1 || interval > 30) {
+        setFormError("Repeat interval must be between 1 and 30.");
+        return;
+      }
+      if (form.repeatEndDate && form.repeatEndDate < startDate) {
+        setFormError("The repeat end date must be on or after its start date.");
+        return;
+      }
+      recurrence = {
+        frequency: form.repeatFrequency,
+        interval,
+        startDate,
+        endDate: form.repeatEndDate || null,
+      };
+    }
+
     setFormError(null);
     await onSave({
       title,
@@ -128,7 +179,8 @@ function TaskEditor({
       category: form.category.trim() || null,
       status: form.status,
       priority: form.priority,
-      dueAt: timestampFromDateInput(form.dueDate),
+      dueAt: timestampFromDateInput(recurrence && !initialSeries ? recurrence.startDate : form.dueDate || recurrence?.startDate || ""),
+      recurrence,
     });
   }
 
@@ -178,6 +230,44 @@ function TaskEditor({
           )}
         </div>
 
+        <div className="task-form-grid task-repeat-grid">
+          <label className="task-field">
+            <span>Repeat</span>
+            <select
+              onChange={(event) => {
+                const repeatFrequency = event.target.value as "none" | RepeatFrequency;
+                setForm((current) => ({
+                  ...current,
+                  repeatFrequency,
+                  repeatStartDate: current.dueDate || current.repeatStartDate || dateKey(new Date()),
+                }));
+              }}
+              value={form.repeatFrequency}
+            >
+              <option value="none">Does not repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </label>
+          {form.repeatFrequency !== "none" && (
+            <>
+              <label className="task-field">
+                <span>Every</span>
+                <input max="30" min="1" onChange={(event) => update("repeatInterval", event.target.value)} type="number" value={form.repeatInterval} />
+              </label>
+              <label className="task-field">
+                <span>Starts on</span>
+                <input onChange={(event) => update("repeatStartDate", event.target.value)} required type="date" value={form.repeatStartDate} />
+              </label>
+              <label className="task-field">
+                <span>Ends on <small>(optional)</small></span>
+                <input onChange={(event) => update("repeatEndDate", event.target.value)} type="date" value={form.repeatEndDate} />
+              </label>
+            </>
+          )}
+        </div>
+
         <label className="task-field task-field--wide">
           <span>Description <small>(optional)</small></span>
           <textarea maxLength={4000} onChange={(event) => update("description", event.target.value)} rows={3} value={form.description} />
@@ -196,6 +286,7 @@ function TaskEditor({
 export function TasksPage() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<LifeTask[]>([]);
+  const [taskSeries, setTaskSeries] = useState<TaskSeries[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<TaskFilter>("all");
@@ -213,14 +304,19 @@ export function TasksPage() {
     }
 
     let cancelled = false;
-    let unsubscribe: (() => void) | undefined;
+    let unsubscribeTasks: (() => void) | undefined;
+    let unsubscribeSeries: (() => void) | undefined;
     setLoading(true);
     setError(null);
 
     void ensureUserProfile(user)
       .then(() => {
         if (cancelled) return;
-        unsubscribe = subscribeToTasks(user.uid, setTasks, (loadError) => {
+        unsubscribeTasks = subscribeToTasks(user.uid, setTasks, (loadError) => {
+          setError(errorMessage(loadError));
+          setLoading(false);
+        });
+        unsubscribeSeries = subscribeToTaskSeries(user.uid, setTaskSeries, (loadError) => {
           setError(errorMessage(loadError));
           setLoading(false);
         });
@@ -233,11 +329,13 @@ export function TasksPage() {
 
     return () => {
       cancelled = true;
-      unsubscribe?.();
+      unsubscribeTasks?.();
+      unsubscribeSeries?.();
     };
   }, [user]);
 
   const today = dateKey(new Date());
+  const seriesById = useMemo(() => new Map(taskSeries.map((item) => [item.id, item])), [taskSeries]);
   const counts = useMemo(() => {
     const open = tasks.filter((task) => task.status !== "done" && task.status !== "cancelled");
     return {
@@ -304,6 +402,16 @@ export function TasksPage() {
     }
   }
 
+  async function undoCompletion() {
+    if (!user || !undoTask) return;
+    try {
+      await undoTaskCompletion(user.uid, undoTask);
+      setUndoTask(null);
+    } catch (undoError) {
+      setError(errorMessage(undoError));
+    }
+  }
+
   async function deleteTask(taskId: string) {
     if (!user) return;
     setError(null);
@@ -342,6 +450,7 @@ export function TasksPage() {
         <TaskEditor
           key={editingTask?.id ?? "new-task"}
           initialTask={editingTask}
+          initialSeries={editingTask?.recurrenceId ? seriesById.get(editingTask.recurrenceId) ?? null : null}
           onCancel={() => { setEditorOpen(false); setEditingTask(null); }}
           onSave={saveTask}
           saving={saving}
@@ -371,7 +480,7 @@ export function TasksPage() {
       {undoTask && (
         <div className="task-undo" role="status">
           <span>Task completed</span>
-          <Button onClick={() => void completeTask(undoTask, false)} variant="ghost">Undo</Button>
+          <Button onClick={() => void undoCompletion()} variant="ghost">Undo</Button>
         </div>
       )}
 
@@ -415,6 +524,11 @@ export function TasksPage() {
                     <div className="task-metadata">
                       {task.dueAt && <span className={overdue ? "task-due is-overdue" : "task-due"}>{overdue ? "Overdue · " : "Due "}{dueDateLabel(task)}</span>}
                       {task.category && <span className="task-category">{task.category}</span>}
+                      {task.recurrenceId && seriesById.get(task.recurrenceId) && (
+                        <span className="task-repeat-badge">
+                          {repeatLabel(seriesById.get(task.recurrenceId)!)}
+                        </span>
+                      )}
                       {task.status !== "todo" && <span className="task-status">{statusLabel(task.status)}</span>}
                       {task.priority === "low" && <span className="task-status">Low priority</span>}
                     </div>

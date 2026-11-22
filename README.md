@@ -24,5 +24,5 @@ From the repository root:
 - docs/ — product and architecture notes
 - .agents/ and .codex/agents/ — LifeOS-specific agent guidance
 
-Firebase Authentication and an empty Standard Firestore database are configured in the LifeOS Firebase project. Tasks now read and write owner-scoped Firestore records once the reviewed LOS-005 rules are deployed. Other sections remain placeholders, and Hosting is not deployed. See docs/FIREBASE_SETUP.md, docs/FIRESTORE_DATA_MODEL.md, and docs/ARCHITECTURE.md. No paid service should be enabled without explicit approval.
+Firebase Authentication and an empty Standard Firestore database are configured in the LifeOS Firebase project. Tasks now read and write owner-scoped Firestore records, including recurring task series, once the reviewed LOS-005/LOS-007 rules are deployed. Other sections remain placeholders, and Hosting is not deployed. See docs/FIREBASE_SETUP.md, docs/FIRESTORE_DATA_MODEL.md, and docs/ARCHITECTURE.md. No paid service should be enabled without explicit approval.
 
