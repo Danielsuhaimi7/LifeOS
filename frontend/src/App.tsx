@@ -15,6 +15,7 @@ import {
 import { FirebaseAuthProvider, useAuth } from "./auth/FirebaseAuthProvider";
 import { TasksPage } from "./tasks/TasksPage";
 import { CalendarPage } from "./calendar/CalendarPage";
+import { NotesPage } from "./notes/NotesPage";
 
 type NavigationItem = {
   label: string;
@@ -112,7 +113,7 @@ function AppLayout() {
             <Route path="/" element={<HomePage />} />
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/notes" element={<SectionPage title="Notes" />} />
+            <Route path="/notes" element={<NotesPage />} />
             <Route path="/finance" element={<SectionPage title="Finance" />} />
             <Route path="/settings" element={<SectionPage title="Settings" />} />
             <Route path="*" element={<NotFoundPage />} />
@@ -193,7 +194,7 @@ function HomePage() {
       <p className="text-eyebrow">LIFEOS FOUNDATION</p>
       <h1 className="heading-display">Your life, in one calm place.</h1>
       <p className="text-body">
-        Your tasks and calendar are ready to organize. Notes and finance will take shape here one small step at a time.
+        Your tasks, calendar, and notes are ready to organize. Finance will take shape here one small step at a time.
       </p>
       <Card className="welcome-card">
         <span className="welcome-icon" aria-hidden="true">✦</span>

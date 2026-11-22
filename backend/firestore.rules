@@ -16,7 +16,9 @@ service cloud.firestore {
     //   allDay bool; timeZone='Asia/Kuala_Lumpur'; taskId nullable task reference;
     //   createdAt/updatedAt.
     // users/{uid}/notes/{noteId}: title 1..160; body <=20000;
-    //   folderId nullable safe ID <=128; createdAt/updatedAt timestamps.
+    //   kind plain|checklist; folderId/taskId/appointmentId nullable safe references;
+    //   createdAt/updatedAt timestamps.
+    // users/{uid}/noteFolders/{folderId}: name 1..60; createdAt/updatedAt timestamps.
     // users/{uid}/accounts/{accountId}: name 1..80; type cash|bank|investment|
     //   creditCard|other; currency='MYR'; openingBalanceSen int within +/-9,999,999,999;
     //   archived bool; createdAt/updatedAt timestamps.
@@ -221,15 +223,34 @@ service cloud.firestore {
     function isValidNote(data) {
       return data is map &&
         data.keys().hasAll([
-          'title', 'body', 'folderId', 'createdAt', 'updatedAt'
+          'title', 'body', 'kind', 'folderId', 'taskId', 'appointmentId', 'createdAt', 'updatedAt'
         ]) &&
         data.keys().hasOnly([
-          'title', 'body', 'folderId', 'createdAt', 'updatedAt'
+          'title', 'body', 'kind', 'folderId', 'taskId', 'appointmentId', 'createdAt', 'updatedAt'
         ]) &&
         validText(data.title, 1, 160) &&
         validText(data.body, 0, 20000) &&
+        data.kind in ['plain', 'checklist'] &&
         validNullableId(data.folderId) &&
+        validNullableId(data.taskId) &&
+        validNullableId(data.appointmentId) &&
         validCommonTimestamps(data);
+    }
+
+    function validNoteReferences(userId, data) {
+      return (data.folderId == null ||
+          exists(/databases/$(database)/documents/users/$(userId)/noteFolders/$(data.folderId))) &&
+        (data.taskId == null ||
+          exists(/databases/$(database)/documents/users/$(userId)/tasks/$(data.taskId))) &&
+        (data.appointmentId == null ||
+          exists(/databases/$(database)/documents/users/$(userId)/appointments/$(data.appointmentId)));
+    }
+
+    function isValidNoteFolder(data) {
+      return data is map &&
+        data.keys().hasAll(['name', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['name', 'createdAt', 'updatedAt']) &&
+        validText(data.name, 1, 60) && validCommonTimestamps(data);
     }
 
     function isValidAccount(data) {
@@ -368,12 +389,26 @@ service cloud.firestore {
         allow read: if hasParentProfile(userId);
         allow create: if hasParentProfile(userId) &&
           isValidNote(request.resource.data) &&
+          validNoteReferences(userId, request.resource.data) &&
           createdAndUpdatedNow(request.resource.data);
         allow update: if hasParentProfile(userId) &&
           isValidNote(request.resource.data) &&
+          validNoteReferences(userId, request.resource.data) &&
           createdAtUnchanged(request.resource.data) &&
           updatedNow(request.resource.data);
         allow delete: if hasParentProfile(userId);
+      }
+
+      match /noteFolders/{folderId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidNoteFolder(request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidNoteFolder(request.resource.data) &&
+          createdAtUnchanged(request.resource.data) && updatedNow(request.resource.data);
+        // Folder records remain stable references for notes.
+        allow delete: if false;
       }
 
       match /accounts/{accountId} {
