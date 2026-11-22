@@ -20,7 +20,7 @@
 - frontend/src/notes/ — Firestore notes/folders repository and responsive plain-text/checklist editor with autosave.
 - frontend/src/dashboard/ — owner-scoped home dashboard built from tasks and appointments.
 - frontend/src/search/ — owner-scoped live search across tasks, appointments, notes, accounts, and transactions.
-- frontend/src/finance/ — owner-scoped account/category/transaction repositories and Finance accounts, income/expense, transfers, and credit card balances page.
+- frontend/src/finance/ — owner-scoped account/category/transaction repositories and Finance accounts, income/expense, transfers, credit card balances, and transaction correction page.
 - docs/NAVIGATION.md — desktop/mobile navigation and feature route status.
 - docs/DECISIONS.md — provisional choices and open questions.
 - docs/DESIGN_SYSTEM.md — UI conventions and component usage.

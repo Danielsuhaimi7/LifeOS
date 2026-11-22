@@ -374,7 +374,9 @@ a {
 .transaction-kind-toggle button.is-selected.is-expense { color: #a34738; }
 .transaction-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-3); }
 .finance-transaction-list { display: grid; gap: var(--space-2); }
-.finance-transaction-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); }
+.finance-transaction-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-3); }
+.finance-transaction-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-1); }
+.transaction-delete-confirm { color: #a34738 !important; font-weight: 600; }
 .transaction-kind-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: var(--radius-pill); background: var(--color-surface-subtle); font-size: var(--font-size-sm); }
 .transaction-kind-mark.is-income, .finance-transaction-amount.is-income { color: #38735a; }
 .transaction-kind-mark.is-expense, .finance-transaction-amount.is-expense { color: #a34738; }
@@ -400,7 +402,8 @@ a {
   .account-form-grid { grid-template-columns: 1fr; gap: var(--space-2); }
   .finance-header-actions { align-items: flex-start; flex-direction: column; }
   .finance-transaction-row { grid-template-columns: 30px minmax(0, 1fr); }
-  .finance-transaction-amount { grid-column: 2; }
+  .finance-transaction-amount, .finance-transaction-actions { grid-column: 2; }
+  .finance-transaction-actions { justify-content: flex-start; }
 }
 
 .notes-page { width: min(1240px, 100%); margin: 0 auto; padding: var(--space-8) 0 var(--space-12); }

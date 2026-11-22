@@ -1,4 +1,4 @@
-import { Timestamp, collection, doc, getDocs, onSnapshot, serverTimestamp, setDoc, type Unsubscribe } from "firebase/firestore";
+import { Timestamp, collection, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp, setDoc, updateDoc, type Unsubscribe } from "firebase/firestore";
 import { firestoreDb } from "../auth/FirebaseAuthProvider";
 import type { AccountType } from "./accountRepository";
 
@@ -84,6 +84,27 @@ export async function createTransaction(userId: string, input: TransactionInput)
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function updateTransaction(userId: string, transactionId: string, input: TransactionInput): Promise<void> {
+  const categoryName = input.categoryName?.trim() ?? "";
+  const categoryId = categoryName && input.kind !== "transfer"
+    ? await resolveCategory(userId, categoryName, input.kind)
+    : null;
+  await updateDoc(doc(database(), "users", userId, "transactions", transactionId), {
+    kind: input.kind,
+    amountSen: input.amountSen,
+    occurredAt: input.occurredAt,
+    accountId: input.accountId,
+    toAccountId: input.toAccountId,
+    categoryId,
+    memo: input.memo?.trim() || null,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteTransaction(userId: string, transactionId: string): Promise<void> {
+  await deleteDoc(doc(database(), "users", userId, "transactions", transactionId));
 }
 
 export function accountBalanceSen(accountId: string, accountType: AccountType, openingBalanceSen: number, transactions: LifeTransaction[]): number {
