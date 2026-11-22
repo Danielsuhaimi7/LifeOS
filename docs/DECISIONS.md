@@ -8,6 +8,7 @@
 - Hosting: Firebase Hosting is planned but not deployed.
 - Target cost: RM0/month; paid services require explicit approval.
 - Currency/time: MYR in integer sen; DD/MM/YYYY; Asia/Kuala_Lumpur; Sunday week start.
+- Finance budgets: one monthly spending limit per expense category, stored as integer sen and keyed by the Kuala Lumpur calendar month.
 
 ## Resolve before feature implementation
 - Complete data access through the LOS-005 model and rules; add client CRUD in feature tickets.

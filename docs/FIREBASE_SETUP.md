@@ -28,7 +28,7 @@ Restart the Vite development server after changing environment variables. `front
 - Desktop uses a Google sign-in popup.
 - Narrow/mobile screens use a full-page redirect; Firebase returns to the app after Google sign-in.
 - All LifeOS routes stay behind the Firebase auth state gate. When the project config is missing, the app shows setup guidance instead of exposing the workspace.
-- Tasks, Calendar, Notes, Finance, and Home create or reuse a minimal owner profile and use Firestore after the reviewed feature rules are deployed. Finance manages accounts, income/expense transactions, transfers, and transaction corrections. Global Search also searches saved transactions. The Home dashboard reads tasks, appointments, accounts, and transactions to calculate its summaries.
+- Tasks, Calendar, Notes, Finance, and Home create or reuse a minimal owner profile and use Firestore after the reviewed feature rules are deployed. Finance manages accounts, categories, monthly budgets, income/expense transactions, transfers, and transaction corrections. Global Search also searches saved transactions. The Home dashboard reads tasks, appointments, accounts, and transactions to calculate its summaries.
 - Firestore access must continue to be protected by Firestore Security Rules. A client-side sign-in gate alone is not a data authorization boundary.
 
 ## Local commands

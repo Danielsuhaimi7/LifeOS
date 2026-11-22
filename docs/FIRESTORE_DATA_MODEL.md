@@ -13,6 +13,7 @@ LOS-005 establishes the first owner-private data contract for the Firebase proje
 /users/{uid}/noteFolders/{folderId}
 /users/{uid}/accounts/{accountId}
 /users/{uid}/categories/{categoryId}
+/users/{uid}/budgets/{budgetId}
 /users/{uid}/transactions/{transactionId}
 ```
 
@@ -32,6 +33,7 @@ All profiles and records are private. There is no sharing, public profile, role,
 | `noteFolders/{folderId}` | `name` 1–60 chars; timestamps. Folders are retained as stable references for notes. |
 | `accounts/{accountId}` | `name` 1–80; `type`: `cash`, `bank`, `investment`, `creditCard`, or `other`; `currency` is `MYR`; `openingBalanceSen` integer within ±9,999,999,999; `archived` boolean; timestamps. No account or card numbers are stored. |
 | `categories/{categoryId}` | `name` 1–60; `kind`: `income` or `expense`; `colorKey` nullable up to 32; `archived` boolean; timestamps. |
+| `budgets/{budgetId}` | `categoryId` safe ID of an active expense category; `monthKey` as `YYYY-MM`; `amountSen` positive integer up to 9,999,999,999; timestamps. The document ID is `{monthKey}_{categoryId}`, allowing one budget per category per month. |
 | `transactions/{transactionId}` | `kind`: `income`, `expense`, or `transfer`; `amountSen` positive integer up to 9,999,999,999; `occurredAt` timestamp; `accountId` safe document ID; `toAccountId` and `categoryId` nullable safe IDs; `memo` nullable up to 1,000; timestamps. Transfers require two different active accounts and no category. Non-transfer categories, when present, must match the transaction kind. Referenced account/category documents must exist under the same user's path and be active. |
 
 LOS-007 adds recurring task series. Each series keeps one current occurrence; completed occurrences remain as ordinary task records. A missed current occurrence stays visible as overdue until completed, cancelled, or deleted. Any additional missed dates are skipped when the next occurrence is generated, so returning after time away does not create a large backlog. Monthly schedules keep their original day number and use the last day of shorter months. Changing a series updates its future schedule and template while leaving existing occurrences unchanged. Bills, loans, savings goals, assets, and reports remain deferred to their feature tickets. No personal records are included in this model or repository.
@@ -42,11 +44,13 @@ LOS-009 adds plain-text and checklist notes, simple folders, edited-time sorting
 
 LOS-012 adds account management for cash, bank, investment, credit card, and other asset accounts. Account records store a display name, type, MYR opening balance in integer sen, and archived state. They do not store account or card numbers. LOS-013 derives current balances from the opening amount and transaction history without changing the stored opening balance.
 
-LOS-013 adds income and expense transactions. Each transaction records a positive integer amount in sen, date, account, optional category, and optional memo. Categories are created as they are first used; category management and budgets are deferred to LOS-018. LOS-014 adds transfers between two different active accounts without a category, and credit card liability balance handling. Asset balances are opening balance plus income and incoming transfers, minus expenses and outgoing transfers. Credit card amounts owed are opening amount plus charges and outgoing transfers, minus payments and income credits. LOS-015 lets the owner edit or delete transactions; edits preserve `createdAt`, refresh `updatedAt`, and recalculate derived balances from the updated history. Edits can retain an existing archived account/category reference, but cannot assign a new archived reference. Deletion requires an explicit confirmation in the Finance interface.
+LOS-013 adds income and expense transactions. Each transaction records a positive integer amount in sen, date, account, optional category, and optional memo. Categories can be created as they are first used. LOS-014 adds transfers between two different active accounts without a category, and credit card liability balance handling. Asset balances are opening balance plus income and incoming transfers, minus expenses and outgoing transfers. Credit card amounts owed are opening amount plus charges and outgoing transfers, minus payments and income credits. LOS-015 lets the owner edit or delete transactions; edits preserve `createdAt`, refresh `updatedAt`, and recalculate derived balances from the updated history. Edits can retain an existing archived account/category reference, but cannot assign a new archived reference. Deletion requires an explicit confirmation in the Finance interface.
 
 LOS-016 adds an owner-scoped Home finance overview. It summarizes net position across account balances, current-month income and expenses, and active account count from existing account and transaction records. Net position includes archived accounts so transfers to or from an archived account remain balanced. Transfers do not count as income or expenses. The summary uses Kuala Lumpur calendar-month boundaries and does not write derived totals to Firestore.
 
 LOS-017 adds a Settings view for the signed-in Firebase account and LifeOS regional defaults. It displays the authenticated profile information and the app-wide time zone, currency, date format, and week start; these defaults remain fixed and are not written by the Settings page.
+
+LOS-018 adds category management and monthly expense budgets. Categories can be created, renamed, archived, and restored; archived categories remain available to label historical transactions. A budget sets a positive MYR amount in integer sen for one expense category and one Kuala Lumpur calendar month. Spending progress is derived from categorized expense transactions in that month; income and transfers are excluded. Budget totals are not stored as transaction aggregates.
 
 ## Validation and write conventions
 
@@ -55,6 +59,7 @@ LOS-017 adds a Settings view for the signed-in Firebase account and LifeOS regio
 - Dates and instants use Firestore timestamps. The app interprets user date/time input in `Asia/Kuala_Lumpur` and formats dates as `DD/MM/YYYY`.
 - Money is stored as integer sen; never use floating point for amounts.
 - Document IDs should be generated by Firestore or match the safe ID pattern in the rules. References use IDs rather than client-supplied document paths.
+- Budget document IDs use `{monthKey}_{categoryId}` so each owner has at most one budget per expense category per month. The month query uses Firestore's automatic single-field index.
 - Account and category references are checked against active documents in the same user's tree. Later data-access code should still validate form input and handle deleted/archived references.
 - User profile creation must happen before creating child records. LOS-006 initializes the minimal profile for the Tasks feature; later data-access features should reuse that owner profile.
 - Standard single-field indexes are automatic. Add composite indexes only alongside actual queries that require them.

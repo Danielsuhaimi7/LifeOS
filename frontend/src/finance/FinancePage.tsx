@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { FirebaseError } from "firebase/app";
 import { Button, Card } from "../components/ui";
 import { useAuth } from "../auth/FirebaseAuthProvider";
 import { ensureUserProfile, timestampFromDateInput } from "../tasks/taskRepository";
 import { saveAccount, setAccountArchived, subscribeToAccounts, type AccountInput, type AccountType, type LifeAccount } from "./accountRepository";
 import { accountBalanceSen, createTransaction, deleteTransaction, subscribeToCategories, subscribeToTransactions, updateTransaction, type LifeCategory, type LifeTransaction, type TransactionInput, type TransactionKind } from "./transactionRepository";
+import { FinancePlanning } from "./FinancePlanning";
 
 const accountTypeLabels: Record<AccountType, string> = {
   cash: "Cash", bank: "Bank", investment: "Investment", creditCard: "Credit card", other: "Other asset",
@@ -190,6 +191,7 @@ export function FinancePage() {
   function openEdit(account: LifeAccount) { setEditing(account); setEditorOpen(true); }
   const recentTransactions = useMemo(() => [...transactions].sort((a, b) => b.occurredAt.toMillis() - a.occurredAt.toMillis()).slice(0, 12), [transactions]);
   const categoryById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
+  const handlePlanningError = useCallback((value: unknown) => setError(errorMessage(value)), []);
 
   function renderAccount(account: LifeAccount) {
     return <Card className="account-card" key={account.id} padding="compact">
@@ -208,6 +210,7 @@ export function FinancePage() {
     <section className="finance-account-section"><div className="finance-section-heading"><div><p className="text-eyebrow">YOUR MONEY, ORGANIZED</p><h2>Active accounts</h2></div><span>{activeAccounts.length} {activeAccounts.length === 1 ? "account" : "accounts"}</span></div>
       {loading ? <Card className="finance-empty"><p>Loading your accounts…</p></Card> : activeAccounts.length === 0 ? <Card className="finance-empty"><span aria-hidden="true">◇</span><h3>No accounts yet</h3><p>Add a cash, bank, investment, credit card, or other asset account to get started.</p><Button onClick={openCreate} variant="secondary">Add your first account</Button></Card> : <div className="finance-account-list">{activeAccounts.map(renderAccount)}</div>}
     </section>
+    {!loading && <FinancePlanning categories={categories} transactions={transactions} onError={handlePlanningError} />}
     <section className="finance-account-section"><div className="finance-section-heading"><div><p className="text-eyebrow">INCOME AND SPENDING</p><h2>Recent activity</h2></div><Button disabled={activeAccounts.length === 0} onClick={() => openTransactionEditor()} variant="ghost">＋ Record transaction</Button></div>
       {loading ? <Card className="finance-empty"><p>Loading activity…</p></Card> : recentTransactions.length === 0 ? <Card className="finance-empty finance-empty--compact"><p>Your transactions will appear here.</p>{activeAccounts.length > 0 && <Button onClick={() => openTransactionEditor()} variant="secondary">Record your first transaction</Button>}</Card> : <div className="finance-transaction-list">{recentTransactions.map((transaction) => {
         const category = transaction.categoryId ? categoryById.get(transaction.categoryId) : null;

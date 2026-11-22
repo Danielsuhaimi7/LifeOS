@@ -384,6 +384,28 @@ a {
 .finance-transaction-main strong { overflow: hidden; font-size: var(--font-size-sm); text-overflow: ellipsis; white-space: nowrap; }
 .finance-transaction-main > span, .finance-transaction-main > small { overflow: hidden; color: var(--color-text-subtle); font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap; }
 .finance-transaction-amount { font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.finance-planning { display: grid; gap: var(--space-3); margin: var(--space-8) 0; }
+.finance-planning-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: var(--space-4); }
+.finance-planning-card { display: grid; gap: var(--space-3); min-width: 0; }
+.finance-planning-card-heading { display: flex; align-items: start; justify-content: space-between; gap: var(--space-3); }
+.finance-planning-card-heading h3 { margin: 0; font-size: var(--font-size-md); }
+.finance-planning-card-heading p { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: var(--font-size-xs); line-height: var(--line-height-body); }
+.finance-category-form, .finance-budget-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) auto; align-items: end; gap: var(--space-2); }
+.finance-budget-form { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); }
+.finance-budget-form-actions { display: flex; flex-wrap: wrap; grid-column: 1 / -1; gap: var(--space-2); }
+.finance-budget-month { display: grid; gap: var(--space-1); color: var(--color-text-muted); font-size: var(--font-size-xs); }
+.finance-budget-month input { min-height: 38px; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0 var(--space-2); color: var(--color-text); background: var(--color-surface); font: inherit; }
+.finance-category-list, .finance-budget-list { display: grid; }
+.finance-category-row, .finance-budget-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); border-top: 1px solid var(--color-border); padding: var(--space-3) 0; }
+.finance-category-info, .finance-budget-row-heading > div:first-child { display: grid; min-width: 0; gap: 3px; }
+.finance-category-info > span, .finance-budget-row-heading > div:first-child > span { color: var(--color-text-muted); font-size: 0.68rem; }
+.finance-category-info > strong, .finance-category-info > input, .finance-budget-row-heading strong { overflow: hidden; font-size: var(--font-size-sm); text-overflow: ellipsis; }
+.finance-category-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-1); }
+.finance-category-actions > span { color: var(--color-text-muted); font-size: 0.68rem; }
+.finance-budget-row { display: grid; gap: var(--space-2); }
+.finance-budget-row-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.finance-budget-row progress { width: 100%; height: 8px; accent-color: var(--color-accent-strong); }
+.finance-planning-empty { margin: 0; color: var(--color-text-subtle); font-size: var(--font-size-xs); }
 .settings-page { display: grid; gap: var(--space-7); max-width: 900px; }
 .settings-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .settings-heading .heading-display { margin: var(--space-3) 0; }
@@ -405,6 +427,7 @@ a {
   .finance-overview-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .finance-overview-strip > p { grid-column: 1 / -1; padding: var(--space-1) 0; }
   .finance-account-list { grid-template-columns: 1fr; }
+  .finance-planning-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {
@@ -418,6 +441,11 @@ a {
   .finance-transaction-row { grid-template-columns: 30px minmax(0, 1fr); }
   .finance-transaction-amount, .finance-transaction-actions { grid-column: 2; }
   .finance-transaction-actions { justify-content: flex-start; }
+  .finance-planning-card-heading { flex-direction: column; }
+  .finance-category-form, .finance-budget-form { grid-template-columns: 1fr; }
+  .finance-category-form > .button, .finance-budget-form-actions { grid-column: 1; }
+  .finance-category-row, .finance-budget-row-heading { align-items: flex-start; flex-direction: column; }
+  .finance-category-actions { justify-content: flex-start; }
 }
 
 .notes-page { width: min(1240px, 100%); margin: 0 auto; padding: var(--space-8) 0 var(--space-12); }

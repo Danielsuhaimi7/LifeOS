@@ -24,6 +24,9 @@ service cloud.firestore {
     //   archived bool; createdAt/updatedAt timestamps.
     // users/{uid}/categories/{categoryId}: name 1..60; kind income|expense;
     //   colorKey nullable <=32; archived bool; createdAt/updatedAt timestamps.
+    // users/{uid}/budgets/{budgetId}: categoryId safe active expense category ID;
+    //   monthKey YYYY-MM; amountSen positive int <=9,999,999,999; timestamps;
+    //   document ID is monthKey + '_' + categoryId (one budget per category/month).
     // users/{uid}/transactions/{transactionId}: kind income|expense|transfer;
     //   amountSen positive int <=9,999,999,999; occurredAt timestamp;
     //   accountId safe ID; toAccountId/categoryId nullable safe IDs; memo nullable <=1000;
@@ -72,6 +75,10 @@ service cloud.firestore {
 
     function validSafeId(value) {
       return value is string && value.matches('^[A-Za-z0-9_-]{1,128}$');
+    }
+
+    function validMonthKey(value) {
+      return value is string && value.matches('^[0-9]{4}-(0[1-9]|1[0-2])$');
     }
 
     function validNullableId(value) {
@@ -298,6 +305,24 @@ service cloud.firestore {
         get(categoryPath).data.kind == kind;
     }
 
+    function isActiveExpenseCategory(userId, categoryId) {
+      let categoryPath = /databases/$(database)/documents/users/$(userId)/categories/$(categoryId);
+      return validSafeId(categoryId) && exists(categoryPath) &&
+        get(categoryPath).data.archived == false &&
+        get(categoryPath).data.kind == 'expense';
+    }
+
+    function isValidBudget(userId, budgetId, data) {
+      return data is map &&
+        data.keys().hasAll(['categoryId', 'monthKey', 'amountSen', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['categoryId', 'monthKey', 'amountSen', 'createdAt', 'updatedAt']) &&
+        validSafeId(data.categoryId) && validMonthKey(data.monthKey) &&
+        budgetId == data.monthKey + '_' + data.categoryId &&
+        budgetId.size() <= 128 &&
+        data.amountSen is int && data.amountSen > 0 && data.amountSen <= 9999999999 &&
+        validCommonTimestamps(data) && isActiveExpenseCategory(userId, data.categoryId);
+    }
+
     function validTransactionReferences(userId, data) {
       return isActiveAccount(userId, data.accountId) &&
         ((data.kind == 'transfer' && data.toAccountId != data.accountId &&
@@ -450,6 +475,18 @@ service cloud.firestore {
           updatedNow(request.resource.data);
         // Categories stay as historical labels; archive them instead of deleting.
         allow delete: if false;
+      }
+
+      match /budgets/{budgetId} {
+        allow read: if hasParentProfile(userId);
+        allow create: if hasParentProfile(userId) &&
+          isValidBudget(userId, budgetId, request.resource.data) &&
+          createdAndUpdatedNow(request.resource.data);
+        allow update: if hasParentProfile(userId) &&
+          isValidBudget(userId, budgetId, request.resource.data) &&
+          createdAtUnchanged(request.resource.data) &&
+          updatedNow(request.resource.data);
+        allow delete: if hasParentProfile(userId);
       }
 
       match /transactions/{transactionId} {
